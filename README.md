@@ -251,31 +251,16 @@ npm run dev
 ---
 
 ## ⚖️ License
-<<<<<<< HEAD
 This project is licensed under the MIT License.
-=======
-
-Licensed under the MIT License.
->>>>>>> temp-branch
 
 ---
 
 ## 🙏 Acknowledgments
-<<<<<<< HEAD
 - YouTube for providing public APIs.
 - React and TailwindCSS communities.
 - All learners and educators who inspire structured self-education.
+- Thanks to the entire TCU Team 1 for the brainstorming, leadership, design, development, and shared vision behind **CuratEd** ❤️
 
 ---
 
 Let’s build a smarter, more structured way to learn from the content that’s already out there.
-=======
-
-Thanks to the entire TCU Team 1 for the brainstorming, leadership, design, development, and shared vision behind **CuratEd** ❤️
-
----
-
-# 🎯 Let’s curate learning. Let’s build CuratEd.
-
->>>>>>> temp-branch
-
