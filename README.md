@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # 📘 YouTube Study Coach
 
 ## 🧠 Overview
@@ -218,7 +218,7 @@ User saves videos → Organizes into custom playlists → Shares or discusses pl
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/curated.git
+git clone https://github.com/Techies-Collab-and-Upskill-Live-Project/CuratED.git
 cd curated
 ```
 
@@ -246,7 +246,6 @@ npm run dev
 - Fork this repo
 - Create a new branch
 - Submit a clear pull request describing changes
->>>>>>> temp-branch
 
 ---
 
