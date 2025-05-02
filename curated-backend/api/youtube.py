@@ -3,7 +3,7 @@ from decouple import config
 
 
 API_KEY = config("YOUTUBE_API_KEY")
-SEARCH_URL = "https://www.googleapis.com/youtube.v3/search"
+SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 
 def fetch_videos_by_keyword(query, max_results=10):
     params = {
