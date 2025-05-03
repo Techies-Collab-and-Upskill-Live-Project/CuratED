@@ -1,5 +1,5 @@
-<<<<<<< HEAD
-# 📘 YouTube Study Coach
+
+# 📘 CuratED
 
 ## 🧠 Overview
 YouTube Study Coach is a platform designed to turn chaotic YouTube learning into a structured, effective, and goal-driven experience. Instead of endlessly scrolling through videos and playlists, users can now learn smarter by using our system to organize, track, and personalize their learning journey—powered by YouTube's existing content library.
@@ -218,7 +218,7 @@ User saves videos → Organizes into custom playlists → Shares or discusses pl
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/curated.git
+git clone https://github.com/Techies-Collab-and-Upskill-Live-Project/CuratED.git
 cd curated
 ```
 
@@ -246,7 +246,6 @@ npm run dev
 - Fork this repo
 - Create a new branch
 - Submit a clear pull request describing changes
->>>>>>> temp-branch
 
 ---
 
