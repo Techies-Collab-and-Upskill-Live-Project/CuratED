@@ -1,33 +1,31 @@
-# 🔧 CuratEd Backend - README
+# 🛠 CuratEd Backend - README
 
 Welcome to the backend service for **CuratEd** — the structured YouTube learning platform!
-This README will guide you through everything we'll be doing step-by-step, from setup to development workflow.
+This README has been updated to reflect a leaner MVP scope focused on delivering fast, distraction-free video discovery using YouTube.
 
 ---
 
-## 🚀 Overview
+## 🚀 MVP Scope (Simplified)
 
-The backend handles all the business logic, database interactions, and external API integrations for CuratEd. It is built using **Django** and **Django REST Framework**.
+For the MVP, our core mission is to:
 
-Key responsibilities include:
-- Managing user authentication
-- Handling YouTube API requests for search results
-- Managing user playlists and video progress
-- Enabling community comments and discussions
+> Help users quickly find relevant YouTube educational content through keyword search and track their learning progress.
+
+We’re prioritizing **speed, clarity, and simplicity**. Additional features (playlists, community, blogs, mentorship) will be explored post-MVP.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠 Tech Stack
 
 - **Backend Framework:** Django + Django REST Framework
-- **Database:** PostgreSQL (using Railway or Supabase for deployment)
-- **Authentication:** Supabase Auth (or Django AllAuth if needed)
+- **Database:** PostgreSQL (via Railway or Supabase)
+- **Authentication:** Optional for MVP (can use session/local storage for now)
 - **Deployment:** Railway or Render
 - **External API:** YouTube Data API v3
 
 ---
 
-## 📈 Project Setup (Step-by-Step)
+## 📦 Project Setup (Step-by-Step)
 
 ### 1. Clone the Repository
 ```bash
@@ -38,7 +36,7 @@ cd curated-backend
 ### 2. Set Up Virtual Environment
 ```bash
 python -m venv env
-source env/bin/activate  # For Windows: .\\env\\Scripts\\activate
+source env/bin/activate  # Windows: .\\env\\Scripts\\activate
 ```
 
 ### 3. Install Dependencies
@@ -46,17 +44,8 @@ source env/bin/activate  # For Windows: .\\env\\Scripts\\activate
 pip install -r requirements.txt
 ```
 
-Dependencies include:
-- Django
-- djangorestframework
-- python-decouple
-- psycopg2-binary
-- requests (for YouTube API calls)
-- corsheaders
-
 ### 4. Configure Environment Variables
 Create a `.env` file in the root of `backend/`:
-
 ```env
 SECRET_KEY=your_django_secret_key
 DEBUG=True
@@ -77,57 +66,45 @@ python manage.py runserver
 
 ---
 
-## 📚 Backend Folder Structure
+## 📂 Backend Folder Structure
 
 ```bash
 curated-backend/
 ├── backend/
 │   ├── settings.py
 │   ├── urls.py
-│   ├── wsgi.py
-│   ├── asgi.py
-│   └── __init__.py
 ├── api/
 │   ├── models.py
-│   ├── serializers.py
 │   ├── views.py
+│   ├── serializers.py
 │   ├── urls.py
-│   ├── youtube.py  # YouTube API Service
-│   ├── comments.py  # Community Comments Logic
-│   └── playlist.py  # Playlist Management Logic
+│   ├── youtube.py
 ├── manage.py
-├── requirements.txt
-└── README.md
+└── .env
 ```
 
 ---
 
-## 🚒 Core APIs We Will Build
+## 🔑 MVP Backend Features
 
-### User Authentication (if handled on backend)
-- Register User
-- Login User
-- Logout User
+### 1. YouTube Search
+- **Endpoint:** `GET /api/search/?q=keyword`
+- **Function:** Uses YouTube Data API v3 to return structured, relevant video content.
 
-### YouTube Search and Curation
-- Search Videos by Keyword (calls YouTube Data API)
-- Process and clean search results
-- Return structured video data to frontend
+### 2. Mark Video as Watched
+- **Endpoint:** `POST /api/progress/mark/`
+- **Function:** Stores video ID and watched status (locally or per session for now).
 
-### Playlist Management
-- Create a playlist
-- Add/remove videos from playlist
-- Fetch user playlists
-- Mark video as watched
+### 3. Get Watched Videos
+- **Endpoint:** `GET /api/progress/list/`
+- **Function:** Returns a list of watched videos to track progress.
 
-### Community Engagement
-- Add comments on videos or playlists
-- View comments
-- Like or reply to comments (future phase)
+### (Optional)
+- Save Video (basic bookmarking): `POST /api/save/`
 
 ---
 
-## 🔄 Development Workflow
+## 🔁 Development Workflow
 
 1. Pull latest changes:
 ```bash
@@ -137,44 +114,31 @@ git pull origin main
 ```bash
 git checkout -b feature/your-feature-name
 ```
-3. Make your changes.
-4. Test your changes locally.
-5. Commit and push:
+3. Make changes locally and test
+4. Commit and push:
 ```bash
 git add .
-git commit -m "Your detailed commit message"
+git commit -m "Your message"
 git push origin feature/your-feature-name
 ```
-6. Open a Pull Request and request a code review.
+5. Open a PR on GitHub and request review
 
 ---
 
-## 🛡️ Deployment
+## 📊 Testing
 
-Once backend is working locally:
-- Connect the GitHub repo to Railway or Render.
-- Add environment variables on the deployment dashboard.
-- Set automatic deployment from the `main` branch.
-
----
-
-## 🛡️ Testing APIs
-
-We will use **Postman** or **Insomnia** for API testing before integrating with frontend.
-
-Test Cases:
-- Search API: Returns correct videos
-- Playlist API: CRUD works
-- Comments API: Post and fetch comments
-- Authentication: Register/login/logout flows
+Use Postman or browser:
+- `GET /api/search/?q=learn+python` — get curated YouTube videos
+- `POST /api/progress/mark/` — mark as watched
+- `GET /api/progress/list/` — retrieve watched history
 
 ---
 
 ## 🙏 Acknowledgments
 
-Thanks to everyone contributing to building **CuratEd** backend. Let's create a backend that makes structured learning easy, fast, and fun!
+Thanks to everyone contributing to building **CuratEd** backend. We're building simple, purposeful tech to make learning easier.
 
 ---
 
-# 🎯 Let's build the heart of CuratEd — clean, scalable, and powerful!
+# 🎯 Let’s stay lean, build smart, and deliver value — fast.
 
