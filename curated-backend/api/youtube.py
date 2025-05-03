@@ -7,6 +7,7 @@ API_KEY = config("YOUTUBE_API_KEY")
 SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 VIDEO_URL = "https://www.googleapis.com/youtube/v3/videos"
 
+
 def fetch_videos_by_keyword(query, max_results=10, educational_focus=True, content_filter='moderate'):
     """
     Enhanced search function that prioritizes educational content based on the PRD requirements.
