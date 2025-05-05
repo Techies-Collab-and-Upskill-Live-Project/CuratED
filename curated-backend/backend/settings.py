@@ -18,8 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-4@#)8&*g3!$=2@1j5v6z7@0^9bq3x@!$%g1&*2+8h3z5@#&*g')
@@ -43,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'api',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -74,6 +74,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
+
+# This will become the default model for user authentication for this app
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
 
 
 # Database
