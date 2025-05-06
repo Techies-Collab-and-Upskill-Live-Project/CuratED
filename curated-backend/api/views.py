@@ -41,8 +41,8 @@ class MarkVideoWatchedAPIView(CreateAPIView):
         That means the user is not allowed to mark the same video as watched twice.
         
         The journey from the search is that when the user searches for a video, the results are fetched from the YouTube API.
-        The user selects one of the video and then frontend collects the details of the video and sends it to the to this particular
-        endpoint and this endpoint stores it in the WatchedVideo Table.
+        The user selects one of the videos, and then the frontend collects the details of the video and sends it to this endpoint.
+        This endpoint stores it in the WatchedVideo Table.
         
         Also, I used the swagger ui because I wanted to test the endpoint and I'll have to login to be able to do that which normal 
         browser testing would not allow me to do so. You can uncomment if needed.
