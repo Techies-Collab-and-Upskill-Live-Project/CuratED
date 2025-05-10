@@ -29,7 +29,7 @@ We’re prioritizing **speed, clarity, and simplicity**. Additional features (pl
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/curated-backend.git
+https://github.com/Techies-Collab-and-Upskill-Live-Project/CuratED.git
 cd curated-backend
 ```
 
@@ -50,7 +50,6 @@ Create a `.env` file in the root of `backend/`:
 SECRET_KEY=your_django_secret_key
 DEBUG=True
 ALLOWED_HOSTS=*
-DATABASE_URL=your_postgresql_db_url
 YOUTUBE_API_KEY=your_youtube_api_key
 ```
 
@@ -73,6 +72,12 @@ curated-backend/
 ├── backend/
 │   ├── settings.py
 │   ├── urls.py
+├── accounts/
+│   ├── models.py
+│   ├── views.py
+│   ├── serializers.py
+│   ├── urls.py
+│   ├── app.py
 ├── api/
 │   ├── models.py
 │   ├── views.py

@@ -54,6 +54,13 @@ class MarkVideoWatchedAPIView(CreateAPIView):
 
 
 """
-Create the Listing view here. This view is used to list all the videos that the user has watched.
+This view is used to list all the videos that the user has watched.
 
 """
+class WatchedVideoListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class =  WatchedVideoSerializer
+    
+    def get_queryset(self):
+        # Return only videos watched by the current user, ordered by most recent
+        return WatchedVideo.objects.filter(user=self.request.user).order_by('-watched_at')
