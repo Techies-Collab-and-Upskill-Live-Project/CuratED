@@ -9,7 +9,7 @@ YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-4@#)8&*g3!$=2@1j5v6z7@0^9bq3x@!$%g1&*2+8h3z5@#&*g')
+SECRET_KEY = config('SECRET_KEY',)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'accounts',
     'rest_framework_simplejwt',
     'drf_yasg',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -80,11 +81,12 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Short-lived access tokens
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Longer refresh tokens for user convenience
+    'ROTATE_REFRESH_TOKENS': True,                   # Generate new refresh token when refreshing
+    'BLACKLIST_AFTER_ROTATION': True,                # Blacklist old refresh tokens
     'AUTH_HEADER_TYPES': ('Bearer',),
-    
-}   
+} 
 
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
