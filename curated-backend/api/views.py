@@ -24,28 +24,32 @@ class YouTubeSearchAPIView(APIView):
             print(f"Error in fetch_videos_by_keyword: {results['error']}")
             return Response({"error": results["error"]}, status=status.HTTP_502_BAD_GATEWAY)
         
-        # The results should already be processed by fetch_videos_by_keyword
-        # Just return it as-is with appropriate status
+        # The results are expected to be already processed by fetch_videos_by_keyword.
+        # Return the results as-is with an appropriate HTTP status.
         return Response(results, status=status.HTTP_200_OK)
     
-# The View for marking a video as watched. The data is feed from the frontend
+# View for marking a video as watched. Data is typically provided by the frontend.
 class MarkVideoWatchedAPIView(CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = WatchedVideoSerializer
 
     def perform_create(self, serializer):
         """
-        This endpoint gets the video property that the user is watching and stores them in the database.
-        The user is authenticated using the IsAuthenticated permission class.
-        If the video is already marked as watched, a validation error is raised.
-        That means the user is not allowed to mark the same video as watched twice.
+        This endpoint receives video properties for a video the user is watching 
+        and stores them in the database.
+        User authentication is handled by the IsAuthenticated permission class.
+        If the video is already marked as watched by the user, a validation error is raised,
+        preventing duplicate entries for the same user and video.
         
-        The journey from the search is that when the user searches for a video, the results are fetched from the YouTube API.
-        The user selects one of the videos, and then the frontend collects the details of the video and sends it to this endpoint.
-        This endpoint stores it in the WatchedVideo Table.
+        The typical user flow:
+        1. User searches for a video.
+        2. Results are fetched from the YouTube API.
+        3. User selects a video.
+        4. Frontend collects video details and sends them to this endpoint.
+        5. This endpoint stores the details in the WatchedVideo table.
         
-        Also, I used the swagger ui because I wanted to test the endpoint and I'll have to login to be able to do that which normal 
-        browser testing would not allow me to do so. You can uncomment if needed.
+        Swagger UI can be useful for testing this endpoint, as it facilitates login 
+        for authenticated requests. Uncomment related paths in urls.py if needed.
         """
         video_id = self.request.data.get('video_id')
         if WatchedVideo.objects.filter(user=self.request.user, video_id=video_id).exists():
@@ -54,13 +58,12 @@ class MarkVideoWatchedAPIView(CreateAPIView):
 
 
 """
-This view is used to list all the videos that the user has watched.
-
+This view lists all videos that the authenticated user has marked as watched.
 """
 class WatchedVideoListView(ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class =  WatchedVideoSerializer
     
     def get_queryset(self):
-        # Return only videos watched by the current user, ordered by most recent
+        # Returns only videos watched by the current user, ordered by the most recent.
         return WatchedVideo.objects.filter(user=self.request.user).order_by('-watched_at')
