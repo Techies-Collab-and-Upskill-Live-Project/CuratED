@@ -30,6 +30,7 @@ media
 
 # Environment variables
 .env
+htcode/
 .venv
 env/
 venv/
