@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'api',
     'accounts',
+    'playlists', 
     'rest_framework_simplejwt',
     'drf_yasg',
     'rest_framework_simplejwt.token_blacklist',
@@ -66,7 +67,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# This will become the default model for user authentication for this app
+# Specifies the custom user model for authentication.
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 REST_FRAMEWORK = {
@@ -81,10 +82,10 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Short-lived access tokens
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Longer refresh tokens for user convenience
-    'ROTATE_REFRESH_TOKENS': True,                   # Generate new refresh token when refreshing
-    'BLACKLIST_AFTER_ROTATION': True,                # Blacklist old refresh tokens
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Short-lived access tokens.
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Longer refresh tokens for user convenience.
+    'ROTATE_REFRESH_TOKENS': True,                   # Generate a new refresh token upon refreshing.
+    'BLACKLIST_AFTER_ROTATION': True,                # Blacklist old refresh tokens after rotation.
     'AUTH_HEADER_TYPES': ('Bearer',),
 } 
 
@@ -97,11 +98,11 @@ SWAGGER_SETTINGS = {
             'description': "Enter token as: **Bearer &lt;your-token&gt;**"
         }
     },
-    'USE_SESSION_AUTH': False,  # Disable login/logout buttons if using token auth
+    'USE_SESSION_AUTH': False,  # Disables Django's session authentication in Swagger UI if token authentication is preferred.
 }
 
 
-# Database
+# Database configuration.
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
@@ -112,7 +113,7 @@ DATABASES = {
 }
 
 
-# Password validation
+# Password validation settings.
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -131,7 +132,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
+# Internationalization settings.
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
@@ -143,12 +144,12 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# Static files (CSS, JavaScript, Images) configuration.
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
 
-# Default primary key field type
+# Default primary key field type configuration.
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
