@@ -70,6 +70,9 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Specifies the custom user model for authentication.
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Use SMTP in production
+DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
