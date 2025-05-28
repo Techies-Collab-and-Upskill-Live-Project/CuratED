@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+import random
 
 
 class CustomUserManager(BaseUserManager):
@@ -37,9 +38,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True)
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
+    otp = models.CharField(max_length=4, blank=True, null=True)
+    otp_created = models.DateTimeField(blank=True, null=True)
     
     
     USERNAME_FIELD = 'email'
@@ -53,6 +56,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+    # def generate_otp(self):
+    #     otp = f"{random.randint(1000,9999)}"
+    #     self.otp = otp
+    #     self.save()
+    #     return otp
 
     def get_full_name(self):
         # The method return the first_name plus the last_name, with a space in between.

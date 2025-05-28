@@ -1,5 +1,5 @@
 """
-URL configuration for backend project.
+URL configuration for the backend project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
@@ -39,7 +39,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('api.urls')),
+    path('', include('api.urls')), # Includes existing API URLs.
+    path('api/', include('playlists.urls')), # Adds playlists app URLs, prefixed with api/.
     path('users/', include('accounts.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
