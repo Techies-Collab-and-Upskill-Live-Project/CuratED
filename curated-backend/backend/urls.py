@@ -39,11 +39,11 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('api.urls')), # Includes existing API URLs.
-    path('api/', include('playlists.urls')), # Adds playlists app URLs, prefixed with api/.
-    path('users/', include('accounts.urls')),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/v1/', include('api.urls')), # Includes existing API URLs.
+    path('api/v1/', include('playlists.urls')), # Adds playlists app URLs, prefixed with api/.
+    path('api/v1/users/', include('accounts.urls')),
+    path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),

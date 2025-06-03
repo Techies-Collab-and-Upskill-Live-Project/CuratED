@@ -3,8 +3,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 import random
-from django.core.mail import sendmail
+from django.core.mail import send_mail
 from .serializers import *
+from datetime import timedelta
+from django.utils.timezone import now
 
 User = get_user_model()
 
