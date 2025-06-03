@@ -10,11 +10,16 @@ class PlaylistItemSerializer(serializers.ModelSerializer):
 class PlaylistSerializer(serializers.ModelSerializer):
     items = PlaylistItemSerializer(many=True, read_only=True)
     user_id = serializers.PrimaryKeyRelatedField(read_only=True, source='user.id')
+    progress = serializers.SerializerMethodField()
 
     class Meta:
         model = Playlist
-        fields = ['id', 'user_id', 'name', 'description', 'created_at', 'updated_at', 'items']
+        fields = ['id', 'user_id', 'name', 'description', 'created_at', 'updated_at', 'items', 'progress']
         read_only_fields = ['id', 'user_id', 'created_at', 'updated_at', 'items']
+
+    def get_progress(self, obj):
+        user = self.context['request'].user
+        return obj.get_progress_for_user(user)
 
 class PlaylistCreateSerializer(serializers.ModelSerializer):
     class Meta:

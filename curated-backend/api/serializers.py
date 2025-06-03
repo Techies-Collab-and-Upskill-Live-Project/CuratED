@@ -7,7 +7,8 @@ class WatchedVideoSerializer(serializers.ModelSerializer):
         fields = [
             'video_id', 'title', 'description', 'thumbnail',
             'channel_title', 'published_at', 'watched_at', 'likes',
-            'comment_count', 'duration'
+            'comment_count', 'duration', 'playlist','video_url', 'progress'
+            
         ]
         read_only_fields = ['watched_at', 'user']
 

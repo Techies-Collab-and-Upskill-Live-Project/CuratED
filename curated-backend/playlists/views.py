@@ -175,3 +175,12 @@ class PlaylistReorderItemsAPIView(generics.GenericAPIView):
         updated_playlist = Playlist.objects.prefetch_related('items').get(pk=playlist.pk)
         updated_playlist_serializer = PlaylistSerializer(updated_playlist)
         return Response(updated_playlist_serializer.data, status=status.HTTP_200_OK)
+        
+class PlaylistProgressAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        playlists = Playlist.objects.filter(user=user)
+        serializer = PlaylistSerializer(playlists, many=True, context={'request': request})
+        return Response(serializer.data)
