@@ -1,9 +1,11 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+import uuid
 
 class WatchedVideo(models.Model):
     # I used settings.AUTH_USER_MODEL instead of directly referencing User because of the custom user model
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='watched_videos')
     video_id = models.CharField(max_length=100, db_index=True)
     title = models.CharField(max_length=255)

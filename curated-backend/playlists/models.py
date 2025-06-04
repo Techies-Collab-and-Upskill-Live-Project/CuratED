@@ -1,8 +1,10 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+import uuid
 
 class Playlist(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='playlists')
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -17,6 +19,7 @@ class Playlist(models.Model):
         return f"{self.name} by {self.user.email}"
 
 class PlaylistItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE, related_name='items')
     video_id = models.CharField(max_length=100) # YouTube video ID
     title = models.CharField(max_length=255)
