@@ -9,13 +9,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
   
-  # Trigger when a new repository is created
+  # Trigger custom events like "repository created" from a GitHub App via webhook → repository_dispatch
   repository_dispatch:
-    types: [created]
-  
-  # Trigger on repository creation/deletion
-  repository:
-    types: [created, deleted, transferred]
+    types: [repository-created, repository-deleted, repository-transferred]
   
   # Trigger on issue events
   issues:
@@ -28,11 +24,9 @@ jobs:
   monitor_activity:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Check out the repository
       - name: Checkout repository
         uses: actions/checkout@v3
-      
-      # Step 2: Get repository information
+
       - name: Get repository information
         id: repo-info
         run: |
@@ -40,24 +34,21 @@ jobs:
           echo "event-name=${{ github.event_name }}" >> $GITHUB_OUTPUT
           echo "actor=${{ github.actor }}" >> $GITHUB_OUTPUT
           echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
-      
-      # Step 3: Set event-specific details
+
       - name: Set event details
         id: event-details
         run: |
-          # Default values
           EVENT_TYPE="unknown"
           EVENT_DESCRIPTION="Unknown activity"
-          
-          # Determine event type and description based on the trigger event
+
           if [[ "${{ github.event_name }}" == "push" ]]; then
             EVENT_TYPE="push"
             EVENT_DESCRIPTION="Pushed to branch ${GITHUB_REF#refs/heads/}"
-            
+
           elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
             PR_ACTION="${{ github.event.action }}"
             EVENT_TYPE="pull_request_${PR_ACTION}"
-            
+
             if [[ "$PR_ACTION" == "opened" ]]; then
               EVENT_DESCRIPTION="Opened pull request #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
             elif [[ "$PR_ACTION" == "closed" ]]; then
@@ -72,23 +63,11 @@ jobs:
             elif [[ "$PR_ACTION" == "reopened" ]]; then
               EVENT_DESCRIPTION="Reopened pull request #${{ github.event.pull_request.number }}"
             fi
-            
-          elif [[ "${{ github.event_name }}" == "repository" ]]; then
-            REPO_ACTION="${{ github.event.action }}"
-            EVENT_TYPE="repository_${REPO_ACTION}"
-            
-            if [[ "$REPO_ACTION" == "created" ]]; then
-              EVENT_DESCRIPTION="Created new repository ${{ github.repository }}"
-            elif [[ "$REPO_ACTION" == "deleted" ]]; then
-              EVENT_DESCRIPTION="Deleted repository ${{ github.repository }}"
-            elif [[ "$REPO_ACTION" == "transferred" ]]; then
-              EVENT_DESCRIPTION="Transferred repository ${{ github.repository }}"
-            fi
-            
+
           elif [[ "${{ github.event_name }}" == "issues" ]]; then
             ISSUE_ACTION="${{ github.event.action }}"
             EVENT_TYPE="issue_${ISSUE_ACTION}"
-            
+
             if [[ "$ISSUE_ACTION" == "opened" ]]; then
               EVENT_DESCRIPTION="Opened issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}"
             elif [[ "$ISSUE_ACTION" == "closed" ]]; then
@@ -96,39 +75,37 @@ jobs:
             elif [[ "$ISSUE_ACTION" == "reopened" ]]; then
               EVENT_DESCRIPTION="Reopened issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}"
             fi
+
+          elif [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            EVENT_TYPE="${{ github.event.action }}"
+            EVENT_DESCRIPTION="External repo activity: ${{ github.event.client_payload.event_description }}"
           fi
-          
-          # Output the determined event type and description
+
           echo "event-type=${EVENT_TYPE}" >> $GITHUB_OUTPUT
           echo "event-description=${EVENT_DESCRIPTION}" >> $GITHUB_OUTPUT
 
-      # Step 4: Prepare summary for notifications
       - name: Create activity summary
         id: activity-summary
         run: |
-          # Create summary string for notifications
           SUMMARY="${{ steps.event-details.outputs.event-description }}"
           echo "summary=${SUMMARY}" >> $GITHUB_OUTPUT
-          
-          # Create a detailed message for email and dashboard
+
           DETAILS="
           Repository Activity Notification
-          
+
           Event: ${{ steps.event-details.outputs.event-type }}
           Description: ${{ steps.event-details.outputs.event-description }}
           Repository: ${{ github.repository }}
           User: ${{ github.actor }}
           Time: ${{ steps.repo-info.outputs.timestamp }}
-          
+
           View details at: https://github.com/${{ github.repository }}
           "
-          # Use a delimiter for multiline output
           delimiter="EOF"
           echo "details<<$delimiter" >> $GITHUB_OUTPUT
           echo "$DETAILS" >> $GITHUB_OUTPUT
           echo "$delimiter" >> $GITHUB_OUTPUT
 
-      # Step 5: Update community dashboard
       - name: Update community dashboard
         uses: peter-evans/repository-dispatch@v2
         with:
@@ -144,7 +121,6 @@ jobs:
               "timestamp": "${{ steps.repo-info.outputs.timestamp }}"
             }
 
-      # Step 6: Send email notification
       - name: Send email notification
         uses: dawidd6/action-send-mail@v3
         with:
