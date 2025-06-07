@@ -21,6 +21,9 @@ class PlaylistListCreateAPIView(generics.ListCreateAPIView):
         return PlaylistSerializer
 
     def get_queryset(self):
+        # Fix: Avoid filtering by user if this is a schema (Swagger) generation request
+        if getattr(self, 'swagger_fake_view', False):
+            return Playlist.objects.none()
         return Playlist.objects.filter(user=self.request.user).prefetch_related('items')
 
     def perform_create(self, serializer):
@@ -35,6 +38,9 @@ class PlaylistRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView
         return PlaylistSerializer # Using PlaylistSerializer for GET requests.
 
     def get_queryset(self):
+        # Fix: Avoid filtering by user if this is a schema (Swagger) generation request
+        if getattr(self, 'swagger_fake_view', False):
+            return Playlist.objects.none()
         return Playlist.objects.filter(user=self.request.user).prefetch_related('items')
 
     def get_object(self):
