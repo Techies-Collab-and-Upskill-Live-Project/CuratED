@@ -1,11 +1,11 @@
 from rest_framework.views import APIView
-from rest_framework.generics import CreateAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 
 from rest_framework.response import Response
 from rest_framework import status
 from .youtube import fetch_videos_by_keyword 
-from .serializers import WatchedVideoSerializer
-from .models import WatchedVideo
+from .serializers import WatchedVideoSerializer, VideoFeedbackSerializer
+from .models import WatchedVideo, VideoFeedback
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import serializers
 
@@ -67,3 +67,19 @@ class WatchedVideoListView(ListAPIView):
     def get_queryset(self):
         # Returns only videos watched by the current user, ordered by the most recent.
         return WatchedVideo.objects.filter(user=self.request.user).order_by('-watched_at')
+
+
+class VideoFeedbackCreateView(CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = VideoFeedbackSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class VideoFeedbackDetailView(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = VideoFeedbackSerializer
+    lookup_field = 'video_id'
+
+    def get_queryset(self):
+        return VideoFeedback.objects.filter(user=self.request.user)
