@@ -1,149 +1,186 @@
-# 🛠 CuratEd Backend - README
+# CuratED Backend API
 
-Welcome to the backend service for **CuratEd** — the structured YouTube learning platform!
-This README has been updated to reflect a leaner MVP scope focused on delivering fast, distraction-free video discovery using YouTube.
+CuratED is an educational video platform that helps users discover, organize, and track their learning journey through curated YouTube content.
 
----
+## 🚀 Tech Stack
 
-## 🚀 MVP Scope (Simplified)
+- Django REST Framework
+- JWT Authentication
+- YouTube Data API v3
+- SQLite (Development)
+- Swagger/OpenAPI Documentation
 
-For the MVP, our core mission is to:
+## 📋 Prerequisites
 
-> Help users quickly find relevant YouTube educational content through keyword search and track their learning progress.
+- Python 3.11+
+- pip
+- YouTube API Key
 
-We’re prioritizing **speed, clarity, and simplicity**. Additional features (playlists, community, blogs, mentorship) will be explored post-MVP.
+## 🛠 Setup
 
----
-
-## 🛠 Tech Stack
-
-- **Backend Framework:** Django + Django REST Framework
-- **Database:** PostgreSQL (via Railway or Supabase)
-- **Authentication:** Optional for MVP (can use session/local storage for now)
-- **Deployment:** Railway or Render
-- **External API:** YouTube Data API v3
-
----
-
-## 📦 Project Setup (Step-by-Step)
-
-### 1. Clone the Repository
+1. **Clone the repository**
 ```bash
-https://github.com/Techies-Collab-and-Upskill-Live-Project/CuratED.git
+git clone https://github.com/Techies-Collab-and-Upskill-Live-Project/CuratED.git
 cd curated-backend
 ```
 
-### 2. Set Up Virtual Environment
+2. **Create and activate virtual environment**
 ```bash
-python -m venv env
-source env/bin/activate  # Windows: .\\env\\Scripts\\activate
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
 ```
 
-### 3. Install Dependencies
+3. **Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
-Create a `.env` file in the root of `backend/`:
-```env
-SECRET_KEY=your_django_secret_key
+4. **Environment Setup**
+```bash
+cp .env.example .env
+```
+Update `.env` with your settings:
+```
+SECRET_KEY='your_django_secret_key'
 DEBUG=True
-ALLOWED_HOSTS=*
-YOUTUBE_API_KEY=your_youtube_api_key
+YOUTUBE_API_KEY='your_youtube_api_key'
+ALLOWED_HOSTS=localhost,127.0.0.1
 ```
 
-### 5. Run Migrations
+5. **Database Setup**
 ```bash
 python manage.py migrate
 ```
 
-### 6. Start the Server
+6. **Create superuser (optional)**
+```bash
+python manage.py createsuperuser
+```
+
+7. **Run Development Server**
 ```bash
 python manage.py runserver
 ```
 
----
+## 🔑 Authentication
 
-## 📂 Backend Folder Structure
+The API uses JWT (JSON Web Tokens) for authentication.
 
+### Register
+```http
+POST /api/v1/users/register/
+{
+    "email": "user@example.com",
+    "password": "securepass123",
+    "first_name": "John",
+    "last_name": "Doe"
+}
+```
+
+### Login
+```http
+POST /api/v1/users/login/
+{
+    "email": "user@example.com",
+    "password": "securepass123"
+}
+```
+
+## 🎥 API Endpoints
+
+### Search Videos
+```http
+GET /api/v1/search/?q=python+tutorial
+```
+
+### Watch History
+```http
+POST /api/v1/progress/mark/
+{
+    "video_id": "abc123",
+    "title": "Learn Python",
+    "description": "Tutorial...",
+    "thumbnail": "https://...",
+    "channel_title": "CodingChannel"
+}
+```
+
+### Playlists
+```http
+POST /api/v1/playlists/
+{
+    "name": "Python Basics",
+    "description": "Beginner Python tutorials"
+}
+```
+
+### Add to Playlist
+```http
+POST /api/v1/playlists/{playlist_id}/items/
+{
+    "video_id": "abc123",
+    "title": "Learn Python",
+    "thumbnail_url": "https://...",
+    "channel_title": "CodingChannel"
+}
+```
+
+## 📝 API Documentation
+
+Full API documentation is available at:
+- Swagger UI: `/swagger/`
+- ReDoc: `/redoc/`
+
+## 🧪 Testing
+
+Run the test suite:
 ```bash
+python manage.py test
+```
+
+Run specific tests:
+```bash
+python manage.py test accounts.tests.AuthenticationTests
+python manage.py test api.tests.YouTubeSearchTests
+```
+
+## 🔒 Security Features
+
+- JWT Authentication
+- Email Verification
+- Password Reset Flow
+- Rate Limiting
+- Token Refresh/Blacklisting
+
+## ⚙️ Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| SECRET_KEY | Django secret key | Required |
+| DEBUG | Debug mode | False |
+| YOUTUBE_API_KEY | YouTube Data API key | Required |
+| ALLOWED_HOSTS | Allowed hosts | * |
+
+## 📁 Project Structure
+
+```
 curated-backend/
-├── backend/
-│   ├── settings.py
-│   ├── urls.py
-├── accounts/
-│   ├── models.py
-│   ├── views.py
-│   ├── serializers.py
-│   ├── urls.py
-│   ├── app.py
-├── api/
-│   ├── models.py
-│   ├── views.py
-│   ├── serializers.py
-│   ├── urls.py
-│   ├── youtube.py
+├── accounts/           # User authentication
+├── api/               # Core API functionality
+├── playlists/         # Playlist management
+├── templates/         # Email templates
 ├── manage.py
-└── .env
+└── requirements.txt
 ```
 
----
+## 🤝 Contributing
 
-## 🔑 MVP Backend Features
+1. Create a new branch (`git checkout -b feature/enhancement`)
+2. Make changes
+3. Run tests
+4. Create pull request
 
-### 1. YouTube Search
-- **Endpoint:** `GET /api/search/?q=keyword`
-- **Function:** Uses YouTube Data API v3 to return structured, relevant video content.
+## 📄 License
 
-### 2. Mark Video as Watched
-- **Endpoint:** `POST /api/progress/mark/`
-- **Function:** Stores video ID and watched status (locally or per session for now).
-
-### 3. Get Watched Videos
-- **Endpoint:** `GET /api/progress/list/`
-- **Function:** Returns a list of watched videos to track progress.
-
-### (Optional)
-- Save Video (basic bookmarking): `POST /api/save/`
-
----
-
-## 🔁 Development Workflow
-
-1. Pull latest changes:
-```bash
-git pull origin main
-```
-2. Create a feature branch:
-```bash
-git checkout -b feature/your-feature-name
-```
-3. Make changes locally and test
-4. Commit and push:
-```bash
-git add .
-git commit -m "Your message"
-git push origin feature/your-feature-name
-```
-5. Open a PR on GitHub and request review
-
----
-
-## 📊 Testing
-
-Use Postman or browser:
-- `GET /api/search/?q=learn+python` — get curated YouTube videos
-- `POST /api/progress/mark/` — mark as watched
-- `GET /api/progress/list/` — retrieve watched history
-
----
-
-## 🙏 Acknowledgments
-
-Thanks to everyone contributing to building **CuratEd** backend. We're building simple, purposeful tech to make learning easier.
-
----
-
-# 🎯 Let’s stay lean, build smart, and deliver value — fast.
-
+This project is licensed under the MIT License.
