@@ -1,140 +1,116 @@
-# CuratED Backend API
+# 🎓 CuratED Backend API
 
-CuratED is an educational video platform that helps users discover, organize, and track their learning journey through curated YouTube content.
+Educational content curation and learning management system powered by Django REST Framework.
 
-## 🚀 Tech Stack
+## 🛠️ Technology Stack
 
-- Django REST Framework
-- JWT Authentication
-- YouTube Data API v3
-- SQLite (Development)
-- Swagger/OpenAPI Documentation
+- **Framework:** Django 5.2 + Django REST Framework
+- **Authentication:** JWT (Simple JWT)
+- **Database:** SQLite (Development) / PostgreSQL (Production)
+- **API Documentation:** Swagger/OpenAPI (drf-yasg)
+- **External APIs:** YouTube Data API v3
+- **Email:** SMTP (Production) / Console (Development)
 
-## 📋 Prerequisites
+## 🚀 Quick Start
 
-- Python 3.11+
-- pip
-- YouTube API Key
-
-## 🛠 Setup
-
-1. **Clone the repository**
+1. **Clone & Setup Virtual Environment**
 ```bash
 git clone https://github.com/Techies-Collab-and-Upskill-Live-Project/CuratED.git
 cd curated-backend
-```
-
-2. **Create and activate virtual environment**
-```bash
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate     # Windows
-```
-
-3. **Install dependencies**
-```bash
 pip install -r requirements.txt
 ```
 
-4. **Environment Setup**
+2. **Environment Setup**
 ```bash
 cp .env.example .env
-```
-Update `.env` with your settings:
-```
-SECRET_KEY='your_django_secret_key'
-DEBUG=True
-YOUTUBE_API_KEY='your_youtube_api_key'
-ALLOWED_HOSTS=localhost,127.0.0.1
+# Update .env with your credentials:
+# - SECRET_KEY
+# - YOUTUBE_API_KEY
+# - DEBUG
+# - ALLOWED_HOSTS
 ```
 
-5. **Database Setup**
+3. **Database Setup**
 ```bash
 python manage.py migrate
-```
-
-6. **Create superuser (optional)**
-```bash
 python manage.py createsuperuser
 ```
 
-7. **Run Development Server**
+4. **Run Development Server**
 ```bash
 python manage.py runserver
 ```
 
-## 🔑 Authentication
+## 📚 API Documentation
 
-The API uses JWT (JSON Web Tokens) for authentication.
+### Authentication Endpoints
 
-### Register
 ```http
 POST /api/v1/users/register/
-{
-    "email": "user@example.com",
-    "password": "securepass123",
-    "first_name": "John",
-    "last_name": "Doe"
-}
-```
-
-### Login
-```http
 POST /api/v1/users/login/
-{
-    "email": "user@example.com",
-    "password": "securepass123"
-}
+POST /api/v1/users/verify-otp/
+POST /api/v1/users/password-reset/
+POST /api/v1/token/refresh/
 ```
 
-## 🎥 API Endpoints
+### Content Endpoints
 
-### Search Videos
 ```http
-GET /api/v1/search/?q=python+tutorial
+GET    /api/v1/search/                    # Search educational videos
+POST   /api/v1/progress/mark/             # Mark video as watched
+GET    /api/v1/progress/list/             # Get watch history
+POST   /api/v1/feedback/                  # Create video feedback
+GET    /api/v1/feedback/{video_id}/       # Get video feedback
 ```
 
-### Watch History
+### Playlist Management
+
 ```http
-POST /api/v1/progress/mark/
-{
-    "video_id": "abc123",
-    "title": "Learn Python",
-    "description": "Tutorial...",
-    "thumbnail": "https://...",
-    "channel_title": "CodingChannel"
-}
+GET    /api/v1/playlists/                # List user playlists
+POST   /api/v1/playlists/                # Create playlist
+GET    /api/v1/playlists/{id}/           # Get playlist details
+POST   /api/v1/playlists/{id}/items/     # Add video to playlist
+PATCH  /api/v1/playlists/{id}/reorder/   # Reorder playlist items
 ```
 
-### Playlists
-```http
-POST /api/v1/playlists/
-{
-    "name": "Python Basics",
-    "description": "Beginner Python tutorials"
-}
+## 🔒 Security Features
+
+- JWT Authentication with refresh tokens
+- Email verification (OTP)
+- Password reset flow
+- Rate limiting
+- Custom password validation
+- Token blacklisting
+
+## 📁 Project Structure
+
+```
+curated-backend/
+├── accounts/           # User authentication & management
+├── api/               # Core API functionality & YouTube integration
+├── playlists/         # Playlist management
+├── templates/         # Email templates
+├── manage.py
+└── requirements.txt
 ```
 
-### Add to Playlist
-```http
-POST /api/v1/playlists/{playlist_id}/items/
-{
-    "video_id": "abc123",
-    "title": "Learn Python",
-    "thumbnail_url": "https://...",
-    "channel_title": "CodingChannel"
-}
-```
+## ⚙️ Environment Variables
 
-## 📝 API Documentation
-
-Full API documentation is available at:
-- Swagger UI: `/swagger/`
-- ReDoc: `/redoc/`
+| Variable | Description | Required |
+|----------|-------------|----------|
+| SECRET_KEY | Django secret key | Yes |
+| YOUTUBE_API_KEY | YouTube Data API key | Yes |
+| DEBUG | Debug mode | No (default: False) |
+| ALLOWED_HOSTS | Allowed hosts | No (default: *) |
+| EMAIL_HOST | SMTP host | Production only |
+| EMAIL_PORT | SMTP port | Production only |
 
 ## 🧪 Testing
 
-Run the test suite:
+Run all tests:
 ```bash
 python manage.py test
 ```
@@ -143,43 +119,22 @@ Run specific tests:
 ```bash
 python manage.py test accounts.tests.AuthenticationTests
 python manage.py test api.tests.YouTubeSearchTests
+python manage.py test playlists.tests.PlaylistManagementTests
 ```
 
-## 🔒 Security Features
+## 📈 API Rate Limits
 
-- JWT Authentication
-- Email Verification
-- Password Reset Flow
-- Rate Limiting
-- Token Refresh/Blacklisting
-
-## ⚙️ Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| SECRET_KEY | Django secret key | Required |
-| DEBUG | Debug mode | False |
-| YOUTUBE_API_KEY | YouTube Data API key | Required |
-| ALLOWED_HOSTS | Allowed hosts | * |
-
-## 📁 Project Structure
-
-```
-curated-backend/
-├── accounts/           # User authentication
-├── api/               # Core API functionality
-├── playlists/         # Playlist management
-├── templates/         # Email templates
-├── manage.py
-└── requirements.txt
-```
+- Anonymous: 100 requests/day
+- Authenticated: 1000 requests/day
+- Login attempts: 5/minute
 
 ## 🤝 Contributing
 
-1. Create a new branch (`git checkout -b feature/enhancement`)
-2. Make changes
-3. Run tests
-4. Create pull request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
