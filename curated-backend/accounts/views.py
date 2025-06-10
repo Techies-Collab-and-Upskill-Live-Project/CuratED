@@ -1,5 +1,4 @@
 from rest_framework.generics import CreateAPIView, UpdateAPIView
-from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -22,34 +21,28 @@ class RegisterView(CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = UserRegistrationSerializer
 
-    def create(self, request, *args, **kwargs):
-        email = request.data.get("email")
+    def perform_create(self, serializer):
+        # Check if email exists first
+        email = self.request.data.get("email")
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
             if user.is_active:
-                return Response({"error": "Email is already registered and verified."}, status=status.HTTP_409_CONFLICT)
-            else:
-                return Response({"error": "Email is already registered but not verified. Please check your email for the OTP or request a new one."}, status=status.HTTP_409_CONFLICT)
+                raise serializers.ValidationError(
+                    {"error": "Email is already registered and verified."}, 
+                    status.HTTP_409_CONFLICT
+                )
+            raise serializers.ValidationError(
+                {"error": "Email is already registered but not verified. Please check your email for the OTP or request a new one."}, 
+                status.HTTP_409_CONFLICT
+            )
 
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            return Response({
-                "message": "User registered successfully.",
-                "user": serializer.data
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-
-    def perform_create(self, serializer):
+        # Create user and send OTP
         user = serializer.save()
-        # Generate OTP
         otp = f"{random.randint(1000,9999)}"
         user.otp = otp
         user.otp_created = now()
         user.save()
 
-        # Send OTP email
         try:
             send_mail(
                 'Verify your CuratED account',
@@ -59,42 +52,10 @@ class RegisterView(CreateAPIView):
                 fail_silently=False,
             )
         except Exception as e:
-            # Log the error but don't expose it to the user
             print(f"Error sending email: {str(e)}")
-            # You might want to handle this more gracefully in production
 
         return user
 
-
-class LoginView(APIView):
-    permission_classes = [AllowAny]
-    
-    def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
-        
-        try:
-            user = User.objects.get(email=email)
-            if not user.check_password(password):
-                return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-            if not user.is_active:
-                return Response({
-                    "error": "Please verify your email first",
-                    "verification_required": True
-                }, status=status.HTTP_403_FORBIDDEN)
-            
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'user': {
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name
-                }
-            })
-        except User.DoesNotExist:
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 class ResendVerificationView(CreateAPIView):
     permission_classes = [AllowAny]
