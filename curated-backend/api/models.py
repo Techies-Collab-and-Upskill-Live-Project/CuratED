@@ -64,17 +64,17 @@ class VideoComment(models.Model):
 class VideoProgress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     video_id = models.CharField(max_length=100)
-    current_time = models.FloatField(default=0)
-    duration = models.FloatField()
+    current_time = models.FloatField(default=0, help_text="Current playback position in seconds")
+    duration = models.FloatField(help_text="Total video duration in seconds")
     percentage_watched = models.FloatField(
         default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Percentage of video watched"
     )
     last_watched = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('user', 'video_id')
-        ordering = ['-last_watched']
 
     def __str__(self):
-        return f"{self.user.email}'s progress on {self.video_id}"
+        return f"{self.user.email}'s progress on {self.video_id}: {self.percentage_watched}%"

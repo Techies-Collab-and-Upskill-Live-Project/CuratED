@@ -4,8 +4,8 @@ from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveUpdateDe
 from rest_framework.response import Response
 from rest_framework import status
 from .youtube import fetch_videos_by_keyword 
-from .serializers import WatchedVideoSerializer, VideoFeedbackSerializer, VideoProgressSerializer
-from .models import WatchedVideo, VideoFeedback, VideoProgress
+from .serializers import WatchedVideoSerializer, VideoFeedbackSerializer
+from .models import WatchedVideo, VideoFeedback
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import serializers
 
@@ -83,14 +83,3 @@ class VideoFeedbackDetailView(RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return VideoFeedback.objects.filter(user=self.request.user)
-
-class VideoProgressUpdateView(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = VideoProgressSerializer
-    lookup_field = 'video_id'
-
-    def get_queryset(self):
-        return VideoProgress.objects.filter(user=self.request.user)
-
-    def perform_update(self, serializer):
-        serializer.save(user=self.request.user)

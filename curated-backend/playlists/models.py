@@ -10,22 +10,6 @@ class Playlist(models.Model):
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_public = models.BooleanField(default=False)
-    shared_with = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name='shared_playlists',
-        blank=True
-    )
-
-    def share_with_user(self, user_email):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        try:
-            user = User.objects.get(email=user_email)
-            self.shared_with.add(user)
-            return True
-        except User.DoesNotExist:
-            return False
 
     class Meta:
         ordering = ['-created_at']
