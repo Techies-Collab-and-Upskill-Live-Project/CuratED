@@ -16,12 +16,12 @@ class Playlist(models.Model):
         related_name='shared_playlists',
         blank=True
     )
-
-    def share_with_user(self, user_email):
+    
+    def share_with_user(self, email):
         from django.contrib.auth import get_user_model
         User = get_user_model()
         try:
-            user = User.objects.get(email=user_email)
+            user = User.objects.get(email=email)
             self.shared_with.add(user)
             return True
         except User.DoesNotExist:

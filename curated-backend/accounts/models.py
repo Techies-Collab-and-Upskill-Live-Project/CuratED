@@ -3,8 +3,13 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.core.cache import cache
+from django.conf import settings
+import pyotp
 import random
 import uuid 
+from django.utils.timezone import now
+from datetime import timedelta
 
 class CustomUserManager(BaseUserManager):
     
@@ -58,11 +63,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.email
     
     def generate_otp(self):
+        """Generate a time-based OTP"""
         otp = f"{random.randint(1000,9999)}"
         self.otp = otp
-        self.otp_created = timezone.now()
+        self.otp_created = now()
         self.save()
         return otp
+
+    def verify_otp(self, otp):
+        """Verify the OTP"""
+        if not self.otp_created or now() - self.otp_created > timedelta(minutes=10):
+            return False
+        return str(self.otp) == str(otp)
 
     def get_full_name(self):
         # The method return the first_name plus the last_name, with a space in between.

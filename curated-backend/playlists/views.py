@@ -12,6 +12,7 @@ from .serializers import (
 )
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.db import models
 
 class PlaylistListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -188,22 +189,45 @@ class PlaylistViewSet(viewsets.ModelViewSet):
     serializer_class = PlaylistSerializer
 
     def get_queryset(self):
-        return Playlist.objects.filter(user=self.request.user)
+        """Return playlists user owns or has access to"""
+        return Playlist.objects.filter(
+            models.Q(user=self.request.user) |
+            models.Q(shared_with=self.request.user) |
+            models.Q(is_public=True)
+        ).distinct()
 
     @action(detail=True, methods=['post'])
     def share(self, request, pk=None):
         playlist = self.get_object()
-        email = request.data.get('email')
+        if playlist.user != request.user:
+            return Response(
+                {"error": "You don't have permission to share this playlist"},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
+        email = request.data.get('email')
         if not email:
             return Response(
-                {'error': 'Email is required'}, 
+                {"error": "Email is required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+        
         if playlist.share_with_user(email):
-            return Response({'message': 'Playlist shared successfully'})
+            return Response({"message": "Playlist shared successfully"})
         return Response(
-            {'error': 'User not found'}, 
+            {"error": "User not found"},
             status=status.HTTP_404_NOT_FOUND
         )
+
+    @action(detail=True, methods=['post'])
+    def make_public(self, request, pk=None):
+        playlist = self.get_object()
+        if playlist.user != request.user:
+            return Response(
+                {"error": "You don't have permission to modify this playlist"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        playlist.is_public = True
+        playlist.save()
+        return Response({"message": "Playlist is now public"})

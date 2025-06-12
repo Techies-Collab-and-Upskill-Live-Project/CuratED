@@ -1,13 +1,20 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 from .views import (
     PlaylistListCreateAPIView,
     PlaylistRetrieveUpdateDestroyAPIView,
     AddVideoToPlaylistAPIView,
     PlaylistItemDestroyAPIView,
-    PlaylistReorderItemsAPIView
+    PlaylistReorderItemsAPIView,
+    PlaylistViewSet
 )
 
-urlpatterns = [
+router = DefaultRouter()
+router.register('playlists', PlaylistViewSet, basename='playlist')
+
+urlpatterns = router.urls
+
+urlpatterns += [
     path('playlists/', PlaylistListCreateAPIView.as_view(), name='playlist-list-create'),
     path('playlists/<uuid:pk>/', PlaylistRetrieveUpdateDestroyAPIView.as_view(), name='playlist-detail'), 
     path('playlists/<uuid:playlist_pk>/items/', AddVideoToPlaylistAPIView.as_view(), name='playlist-add-item'),

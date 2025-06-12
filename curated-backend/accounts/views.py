@@ -14,6 +14,8 @@ from django.utils.timezone import now
 from datetime import timedelta
 from .serializers import *
 import random
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 User = get_user_model()
 
@@ -43,25 +45,28 @@ class RegisterView(CreateAPIView):
 
     def perform_create(self, serializer):
         user = serializer.save()
-        # Generate OTP
-        otp = f"{random.randint(1000,9999)}"
-        user.otp = otp
-        user.otp_created = now()
-        user.save()
+        otp = user.generate_otp()
 
-        # Send OTP email
         try:
+            # Render email template
+            html_message = render_to_string('email/auth/verify_email.html', {
+                'otp': otp,
+                'user': user
+            })
+            plain_message = strip_tags(html_message)
+
+            # Send email
             send_mail(
                 'Verify your CuratED account',
-                f'Your verification code is: {otp}\nThis code will expire in 10 minutes.',
+                plain_message,
                 settings.DEFAULT_FROM_EMAIL,
                 [user.email],
+                html_message=html_message,
                 fail_silently=False,
             )
         except Exception as e:
-            # Log the error but don't expose it to the user
             print(f"Error sending email: {str(e)}")
-            # You might want to handle this more gracefully in production
+            # Log error in production
 
         return user
 
@@ -196,9 +201,14 @@ class OTPVerifyView(CreateAPIView):
             if user.is_active:
                 return Response({"message": "Account already verified"}, status=status.HTTP_200_OK)
             
-            if user.otp != otp:
+            # Debug line to check values
+            print(f"Received OTP: {otp}, Stored OTP: {user.otp}")
+            
+            # Convert both to strings for comparison
+            if str(user.otp) != str(otp):
                 return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
             
+            # Check expiration
             if not user.otp_created or now() - user.otp_created > timedelta(minutes=10):
                 return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -207,6 +217,47 @@ class OTPVerifyView(CreateAPIView):
             user.otp_created = None
             user.save()
             
-            return Response({"message": "Account verified successfully"}, status=status.HTTP_200_OK)
+            # Generate tokens after verification
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "message": "Account verified successfully",
+                "tokens": {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token)
+                }
+            }, status=status.HTTP_200_OK)
+            
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        
+        # Check for remember_me flag
+        remember_me = request.data.get('remember_me', False)
+        
+        if remember_me:
+            # Get the refresh token
+            refresh = RefreshToken(response.data['refresh'])
+            
+            # Update its lifetime
+            refresh.set_exp(lifetime=timedelta(days=30))
+            
+            # Update response with new tokens
+            response.data['refresh'] = str(refresh)
+            response.data['access'] = str(refresh.access_token)
+            
+            # Set refresh token in HTTP-only cookie
+            response.set_cookie(
+                'refresh_token',
+                response.data['refresh'],
+                max_age=30 * 24 * 60 * 60,  # 30 days
+                httponly=True,
+                secure=not settings.DEBUG,
+                samesite='Strict'
+            )
+        
+        return response
