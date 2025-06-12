@@ -1,6 +1,7 @@
-from rest_framework import generics, status, serializers
+from rest_framework import generics, status, serializers, viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 from .models import Playlist, PlaylistItem
 from .serializers import (
     PlaylistSerializer,
@@ -181,3 +182,28 @@ class PlaylistReorderItemsAPIView(generics.GenericAPIView):
         updated_playlist = Playlist.objects.prefetch_related('items').get(pk=playlist.pk)
         updated_playlist_serializer = PlaylistSerializer(updated_playlist)
         return Response(updated_playlist_serializer.data, status=status.HTTP_200_OK)
+
+class PlaylistViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PlaylistSerializer
+
+    def get_queryset(self):
+        return Playlist.objects.filter(user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def share(self, request, pk=None):
+        playlist = self.get_object()
+        email = request.data.get('email')
+        
+        if not email:
+            return Response(
+                {'error': 'Email is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        if playlist.share_with_user(email):
+            return Response({'message': 'Playlist shared successfully'})
+        return Response(
+            {'error': 'User not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
