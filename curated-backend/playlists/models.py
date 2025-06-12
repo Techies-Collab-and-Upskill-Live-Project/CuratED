@@ -1,13 +1,31 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+import uuid
 
 class Playlist(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='playlists')
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_public = models.BooleanField(default=False)
+    shared_with = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='shared_playlists',
+        blank=True
+    )
+
+    def share_with_user(self, user_email):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            user = User.objects.get(email=user_email)
+            self.shared_with.add(user)
+            return True
+        except User.DoesNotExist:
+            return False
 
     class Meta:
         ordering = ['-created_at']
@@ -17,6 +35,7 @@ class Playlist(models.Model):
         return f"{self.name} by {self.user.email}"
 
 class PlaylistItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE, related_name='items')
     video_id = models.CharField(max_length=100) # YouTube video ID
     title = models.CharField(max_length=255)

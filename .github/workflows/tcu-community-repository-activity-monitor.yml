@@ -1,0 +1,134 @@
+name: TCU Community Repository Activity Monitor
+
+on:
+  # Trigger on push events
+  push:
+    branches: ['**']
+  
+  # Trigger on pull request events
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  
+  # Trigger custom events like "repository created" from a GitHub App via webhook → repository_dispatch
+  repository_dispatch:
+    types: [repository-created, repository-deleted, repository-transferred]
+  
+  # Trigger on issue events
+  issues:
+    types: [opened, closed, reopened]
+  
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  monitor_activity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get repository information
+        id: repo-info
+        run: |
+          echo "repo-name=${{ github.repository }}" >> $GITHUB_OUTPUT
+          echo "event-name=${{ github.event_name }}" >> $GITHUB_OUTPUT
+          echo "actor=${{ github.actor }}" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+
+      - name: Set event details
+        id: event-details
+        run: |
+          EVENT_TYPE="unknown"
+          EVENT_DESCRIPTION="Unknown activity"
+
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            EVENT_TYPE="push"
+            EVENT_DESCRIPTION="Pushed to branch ${GITHUB_REF#refs/heads/}"
+
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            PR_ACTION="${{ github.event.action }}"
+            EVENT_TYPE="pull_request_${PR_ACTION}"
+
+            if [[ "$PR_ACTION" == "opened" ]]; then
+              EVENT_DESCRIPTION="Opened pull request #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+            elif [[ "$PR_ACTION" == "closed" ]]; then
+              if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+                EVENT_TYPE="pull_request_merged"
+                EVENT_DESCRIPTION="Merged pull request #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+              else
+                EVENT_DESCRIPTION="Closed pull request #${{ github.event.pull_request.number }} without merging"
+              fi
+            elif [[ "$PR_ACTION" == "synchronize" ]]; then
+              EVENT_DESCRIPTION="Updated pull request #${{ github.event.pull_request.number }}"
+            elif [[ "$PR_ACTION" == "reopened" ]]; then
+              EVENT_DESCRIPTION="Reopened pull request #${{ github.event.pull_request.number }}"
+            fi
+
+          elif [[ "${{ github.event_name }}" == "issues" ]]; then
+            ISSUE_ACTION="${{ github.event.action }}"
+            EVENT_TYPE="issue_${ISSUE_ACTION}"
+
+            if [[ "$ISSUE_ACTION" == "opened" ]]; then
+              EVENT_DESCRIPTION="Opened issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}"
+            elif [[ "$ISSUE_ACTION" == "closed" ]]; then
+              EVENT_DESCRIPTION="Closed issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}"
+            elif [[ "$ISSUE_ACTION" == "reopened" ]]; then
+              EVENT_DESCRIPTION="Reopened issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}"
+            fi
+
+          elif [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            EVENT_TYPE="${{ github.event.action }}"
+            EVENT_DESCRIPTION="External repo activity: ${{ github.event.client_payload.event_description }}"
+          fi
+
+          echo "event-type=${EVENT_TYPE}" >> $GITHUB_OUTPUT
+          echo "event-description=${EVENT_DESCRIPTION}" >> $GITHUB_OUTPUT
+
+      - name: Create activity summary
+        id: activity-summary
+        run: |
+          SUMMARY="${{ steps.event-details.outputs.event-description }}"
+          echo "summary=${SUMMARY}" >> $GITHUB_OUTPUT
+
+          DETAILS="
+          Repository Activity Notification
+
+          Event: ${{ steps.event-details.outputs.event-type }}
+          Description: ${{ steps.event-details.outputs.event-description }}
+          Repository: ${{ github.repository }}
+          User: ${{ github.actor }}
+          Time: ${{ steps.repo-info.outputs.timestamp }}
+
+          View details at: https://github.com/${{ github.repository }}
+          "
+          delimiter="EOF"
+          echo "details<<$delimiter" >> $GITHUB_OUTPUT
+          echo "$DETAILS" >> $GITHUB_OUTPUT
+          echo "$delimiter" >> $GITHUB_OUTPUT
+
+      - name: Update community dashboard
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.COMMUNITY_PAT }}
+          repository: ${{ github.repository_owner }}/.github
+          event-type: repository-activity
+          client-payload: |
+            {
+              "repository": "${{ github.repository }}",
+              "actor": "${{ github.actor }}",
+              "event_type": "${{ steps.event-details.outputs.event-type }}",
+              "event_description": "${{ steps.event-details.outputs.event-description }}",
+              "timestamp": "${{ steps.repo-info.outputs.timestamp }}"
+            }
+
+      - name: Send email notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "TCU GitHub Activity: ${{ steps.activity-summary.outputs.summary }}"
+          body: ${{ steps.activity-summary.outputs.details }}
+          to: ${{ secrets.NOTIFICATION_EMAIL_LIST }}
+          from: TCU Repository Monitor <${{ secrets.MAIL_FROM }}>

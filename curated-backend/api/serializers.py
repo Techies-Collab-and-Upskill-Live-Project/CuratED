@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import WatchedVideo
+from .models import WatchedVideo, VideoFeedback, VideoComment, VideoProgress
 
 class WatchedVideoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,3 +17,38 @@ class WatchedVideoSerializer(serializers.ModelSerializer):
             if not data.get(field):
                 raise serializers.ValidationError({field: f"{field} is required."})
         return data
+
+class VideoFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VideoFeedback
+        fields = ['id', 'video_id', 'rating', 'comment', 'helpful', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_video_id(self, value):
+        # Ensure video exists in watched videos
+        user = self.context['request'].user
+        if not WatchedVideo.objects.filter(user=user, video_id=value).exists():
+            raise serializers.ValidationError("You can only provide feedback for videos you've watched.")
+        return value
+
+class VideoCommentSerializer(serializers.ModelSerializer):
+    replies = serializers.SerializerMethodField()
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+
+    class Meta:
+        model = VideoComment
+        fields = ['id', 'video_id', 'text', 'timestamp', 'created_at', 
+                 'updated_at', 'user_email', 'parent', 'replies', 'is_edited']
+        read_only_fields = ['created_at', 'updated_at', 'user_email', 'is_edited']
+
+    def get_replies(self, obj):
+        if obj.parent is None:  # Only get replies for parent comments
+            replies = obj.replies.all()
+            return VideoCommentSerializer(replies, many=True).data
+        return []
+
+class VideoProgressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VideoProgress
+        fields = ['video_id', 'current_time', 'duration', 'percentage_watched', 'last_watched']
+        read_only_fields = ['last_watched']

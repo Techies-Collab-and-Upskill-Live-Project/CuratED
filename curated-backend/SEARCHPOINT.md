@@ -27,7 +27,9 @@
             "duration": "PT17M39S"
         },
     ...
-  ],
+  ]
+}  
+],
   "query": "python tutorial",
   "total_results": 1
 }

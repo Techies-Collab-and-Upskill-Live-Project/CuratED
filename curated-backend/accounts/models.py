@@ -3,7 +3,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
+import random
+import uuid 
 
 class CustomUserManager(BaseUserManager):
     
@@ -34,14 +35,16 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(_('email address'), unique=True)
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
-    
-    
+    otp = models.CharField(max_length=4, blank=True, null=True)
+    otp_created = models.DateTimeField(blank=True, null=True)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
@@ -53,6 +56,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+    def generate_otp(self):
+        otp = f"{random.randint(1000,9999)}"
+        self.otp = otp
+        self.otp_created = timezone.now()
+        self.save()
+        return otp
 
     def get_full_name(self):
         # The method return the first_name plus the last_name, with a space in between.
@@ -63,3 +73,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         # The method return the first_name, with a space in between.
         return self.first_name
+
+class TokenTracker(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    jti = models.CharField(max_length=255)  # JWT ID
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_blacklisted = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.email} - {self.jti}"
