@@ -47,15 +47,14 @@ class RegisterView(CreateAPIView):
         user = serializer.save()
         otp = user.generate_otp()
 
-        try:
-            # Render email template
-            html_message = render_to_string('email/auth/verify_email.html', {
-                'otp': otp,
-                'user': user
-            })
-            plain_message = strip_tags(html_message)
+        # Render email template
+        html_message = render_to_string('email/auth/verify_email.html', {
+            'user': user,
+            'otp': otp
+        })
+        plain_message = strip_tags(html_message)
 
-            # Send email
+        try:
             send_mail(
                 'Verify your CuratED account',
                 plain_message,
@@ -66,7 +65,6 @@ class RegisterView(CreateAPIView):
             )
         except Exception as e:
             print(f"Error sending email: {str(e)}")
-            # Log error in production
 
         return user
 
