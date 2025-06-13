@@ -52,7 +52,7 @@ class RegisterView(CreateAPIView):
                 fail_silently=False,
             )
         except Exception as e:
-            print(f"Error sending email: {str(e)}")
+            logger.error(f"Error sending email: {str(e)}")
 
         return user
 
