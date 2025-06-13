@@ -133,6 +133,20 @@ DATABASES = {
 }
 
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',  # Adjust Redis URL as needed
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# Cache timeout (in seconds)
+CACHE_TIMEOUT = 3600  # 1 hour for search results
+VIDEO_DETAILS_CACHE_TIMEOUT = 86400  # 24 hours for video details
+
 # Password validation settings.
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
