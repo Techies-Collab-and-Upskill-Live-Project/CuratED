@@ -38,7 +38,7 @@ class RegisterView(CreateAPIView):
 
         # Create user and send OTP
         user = serializer.save()
-        otp = f"{random.randint(1000,9999)}"
+        otp = f"{secrets.choice(range(1000, 10000))}"
         user.otp = otp
         user.otp_created = now()
         user.save()
