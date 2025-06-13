@@ -132,3 +132,4 @@ jobs:
           body: ${{ steps.activity-summary.outputs.details }}
           to: ${{ secrets.NOTIFICATION_EMAIL_LIST }}
           from: TCU Repository Monitor <${{ secrets.MAIL_FROM }}>
+
