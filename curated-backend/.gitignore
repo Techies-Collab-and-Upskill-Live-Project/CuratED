@@ -30,6 +30,7 @@ media
 
 # Environment variables
 .env
+htcode/
 .venv
 env/
 venv/
@@ -60,3 +61,7 @@ coverage.xml
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+# Logs
+logs/
+*.log
