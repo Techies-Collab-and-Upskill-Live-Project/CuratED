@@ -1,23 +1,16 @@
 from pathlib import Path
 from decouple import config
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
-
-
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY',)
-
-# SECURITY WARNING: don't run with debug turned on in production!
+# Core Settings
+SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
-
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
-
-CORS_ALLOW_ALL_ORIGINS = True
+YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
 
 # Application definition
 
@@ -34,8 +27,8 @@ INSTALLED_APPS = [
     'accounts',
     'playlists', 
     'rest_framework_simplejwt',
-    'drf_yasg',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -99,8 +92,6 @@ REST_FRAMEWORK = {
     }
 }
 
-from datetime import timedelta
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Short-lived access tokens.
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Longer refresh tokens for user convenience.
@@ -133,17 +124,25 @@ DATABASES = {
 }
 
 
+# For development, use the simpler cache backend
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',  # Adjust Redis URL as needed
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
     }
 }
 
-# Cache timeout (in seconds)
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379/1',  # Adjust Redis URL as needed
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         }
+#     }
+# }
+
+# Cache timeout settings
 CACHE_TIMEOUT = 3600  # 1 hour for search results
 VIDEO_DETAILS_CACHE_TIMEOUT = 86400  # 24 hours for video details
 
@@ -232,5 +231,16 @@ LOGGING = {
 # Email templates directory
 TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
 
+# Frontend URL for password reset links
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+        },
+    },
+}
+
+# Email templates directory
+TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
+
+# Frontend URL for password reset links
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 # Frontend URL for password reset links
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')

@@ -1,13 +1,16 @@
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
-from rest_framework import status
-from .youtube import fetch_videos_by_keyword, invalidate_cache
-from .serializers import YouTubeSearchSerializer, WatchedVideoSerializer, VideoFeedbackSerializer, VideoProgressSerializer
-from .models import WatchedVideo, VideoFeedback, VideoProgress
+from rest_framework import status, serializers
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework import serializers
 from rest_framework.exceptions import APIException
+from rest_framework.mixins import CreateModelMixin
+from .youtube import fetch_videos_by_keyword, invalidate_cache
+from .serializers import (
+    YouTubeSearchSerializer, WatchedVideoSerializer, 
+    VideoFeedbackSerializer, VideoProgressSerializer
+)
+from .models import WatchedVideo, VideoFeedback, VideoProgress
 
 
 class YouTubeSearchAPIView(ListAPIView):
@@ -15,44 +18,27 @@ class YouTubeSearchAPIView(ListAPIView):
     serializer_class = YouTubeSearchSerializer
 
     def get_queryset(self):
-        # Get query parameters
         serializer = self.serializer_class(data=self.request.query_params)
-        serializer.is_valid(raise_exception=True)  
+        serializer.is_valid(raise_exception=True)
         
-        # Extract validated data
-        params = serializer.validated_data
+        results = fetch_videos_by_keyword(**serializer.validated_data)
         
-        
-        # Call fetch_videos_by_keyword
-        results = fetch_videos_by_keyword(
-            query=params['q'],
-            max_results=params['max_results'],
-            educational_focus=params['educational_focus'],
-            content_filter=params['content_filter'],
-            min_duration=params['min_duration'],
-            max_duration=params['max_duration'],
-            sort_by=params['sort_by'],
-            page_token=params['page_token']
-        )
-        
-        # Handle errors
         if "error" in results:
-            print(f"Error in fetch_videos_by_keyword: {results['error']}")
-            # Raise an exception to return 502
             raise APIException(detail=results["error"], code=status.HTTP_502_BAD_GATEWAY)
         
-        # Return results as a "queryset" (list of dicts)
         return results.get('results', [])
     
     def list(self, request, *args, **kwargs):
         results = self.get_queryset()
-        serializer = self.get_serializer(self.request.query_params)
+        params_serializer = self.get_serializer(data=self.request.query_params)
+        params_serializer.is_valid(raise_exception=True)
+        
         return Response({
             'results': results,
-            'query': serializer.validated_data['q'],
+            'query': params_serializer.validated_data['q'],
             'total_results': len(results),
-            'next_page_token': results.get('next_page_token'),
-            'prev_page_token': results.get('prev_page_token')
+            'next_page_token': getattr(self, 'pagination_token', None),
+            'prev_page_token': getattr(self, 'prev_token', None)
         }, status=status.HTTP_200_OK)
         
 
@@ -100,10 +86,36 @@ class VideoFeedbackDetailView(RetrieveUpdateDestroyAPIView):
         invalidate_cache(video_id=self.kwargs.get('video_id'))
 
 
-class VideoProgressUpdateView(RetrieveUpdateDestroyAPIView):
+class VideoProgressUpdateView(CreateModelMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = VideoProgressSerializer
     lookup_field = 'video_id'
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def get_queryset(self):
+        return VideoProgress.objects.filter(user=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(user=self.request.user)
+        invalidate_cache(video_id=self.kwargs.get('video_id'))
+        invalidate_cache(video_id=self.kwargs.get('video_id'))
+
+
+class VideoProgressUpdateView(CreateModelMixin, RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = VideoProgressSerializer
+    lookup_field = 'video_id'
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     def get_queryset(self):
         return VideoProgress.objects.filter(user=self.request.user)

@@ -8,10 +8,10 @@ class YouTubeSearchSerializer(serializers.Serializer):
     max_results = serializers.IntegerField(default=10, min_value=1)
     educational_focus = serializers.BooleanField(default=True)
     content_filter = serializers.ChoiceField(choices=['none', 'moderate', 'strict'], default='moderate')
-    min_duration = serializers.IntegerField(required=False, allow_null=True)
-    max_duration = serializers.IntegerField(required=False, allow_null=True)
+    min_duration = serializers.IntegerField(required=False, allow_null=True, default=None)
+    max_duration = serializers.IntegerField(required=False, allow_null=True, default=None)
     sort_by = serializers.ChoiceField(choices=['relevance', 'date', 'viewCount', 'rating'], default='relevance')
-    page_token = serializers.CharField(required=False, allow_null=True)
+    page_token = serializers.CharField(required=False, allow_null=True, default=None)
 
 class WatchedVideoSerializer(serializers.ModelSerializer):
     class Meta:

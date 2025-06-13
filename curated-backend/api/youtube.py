@@ -42,6 +42,7 @@ def fetch_videos_by_keyword(query, max_results=10, educational_focus=True, conte
         'q': query,
         'maxResults': max_results,
         'type': 'video',
+        'key': API_KEY,  # Add API key to params
         'relevanceLanguage': 'en',
         'videoEmbeddable': 'true',
         'safeSearch': content_filter,
