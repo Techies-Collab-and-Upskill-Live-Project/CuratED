@@ -2,67 +2,95 @@ import requests
 from decouple import config
 import re
 import json
+from django.core.cache import cache
+import time
+import hashlib
 
 API_KEY = config("YOUTUBE_API_KEY")
 SEARCH_URL = "https://www.googleapis.com/youtube/v3/search"
 VIDEO_URL = "https://www.googleapis.com/youtube/v3/videos"
 
 
-def fetch_videos_by_keyword(query, max_results=10, educational_focus=True, content_filter='moderate'):
+def generate_cache_key(query, params):
+    """Generate a unique cache key based on query and parameters."""
+    param_string = json.dumps(params, sort_keys=True)
+    key_string = f"{query}:{param_string}"
+    return hashlib.md5(key_string.encode()).hexdigest()
+
+
+def fetch_videos_by_keyword(query, max_results=10, educational_focus=True, content_filter='moderate',
+                          min_duration=None, max_duration=None, sort_by='relevance', page_token=None):
     """
-    Enhanced search function that prioritizes educational content based on PRD requirements.
-    
+    Enhanced search function with caching, pagination, and advanced filtering.
+
     Args:
         query (str): The search term.
         max_results (int): Maximum number of results to return.
         educational_focus (bool): Whether to apply educational content filtering.
         content_filter (str): Content filtering level ('none', 'moderate', 'strict').
-    
+        min_duration (int): Minimum video duration in seconds.
+        max_duration (int): Maximum video duration in seconds.
+        sort_by (str): Sorting criteria ('relevance', 'date', 'viewCount', 'rating').
+        page_token (str): Token for pagination.
+
     Returns:
-        dict: Processed search results with educational relevance.
+        dict: Processed search results with educational relevance and pagination info.
     """
-    # Add educational keywords if educational_focus is True.
+    # Generate cache key
+    params = {
+        'part': 'snippet',
+        'q': query,
+        'maxResults': max_results,
+        'type': 'video',
+        'relevanceLanguage': 'en',
+        'videoEmbeddable': 'true',
+        'safeSearch': content_filter,
+        'videoDefinition': 'high',
+        'videoDuration': 'medium',
+        'order': sort_by,
+    }
+    if page_token:
+        params['pageToken'] = page_token
+
+    cache_key = generate_cache_key(query, params)
+    cached_result = cache.get(cache_key)
+    
+    if cached_result:
+        print(f"Cache hit for key: {cache_key}")
+        return cached_result
+
+    # Add educational keywords if educational_focus is True
     search_query = query
     if educational_focus:
-        # Only add educational terms if they're not already in the query.
         edu_terms = ['tutorial', 'learn', 'course', 'education', 'how to']
         if not any(term in query.lower() for term in edu_terms):
             search_query = f"{query} tutorial"
-    
+
     print(f"Searching YouTube for: '{search_query}'")
-    
-    params = {
-        'part': 'snippet',
-        'q': search_query,
-        'key': API_KEY,
-        'maxResults': max_results,
-        'type': 'video',
-        'relevanceLanguage': 'en',  # Can be made configurable based on user preference.
-        'videoEmbeddable': 'true',  # Ensures videos can be embedded.
-        'safeSearch': content_filter,
-        'videoDefinition': 'high',   # Prefers high quality videos.
-        'videoDuration': 'medium',   # Duration categories: short <4m, medium 4-20m, long >20m.
-    }
+
+    params['q'] = search_query
     
     try:
         response = requests.get(SEARCH_URL, params=params)
-        
-        # Debug: Log API request details.
         print(f"YouTube API request URL: {response.url.replace(API_KEY, 'API_KEY_HIDDEN')}")
         print(f"Status Code: {response.status_code}")
-        
+
         if response.status_code == 200:
             search_data = response.json()
-            
-            # Debug: Log the number of items returned by the API.
             item_count = len(search_data.get('items', []))
             print(f"YouTube API returned {item_count} items")
-            
+
             if item_count == 0:
                 print("YouTube API returned zero videos")
-                return {"results": [], "message": "No videos found for your search"}
-            
-            # Extract video IDs, handling potential format issues.
+                result = {
+                    "results": [],
+                    "message": "No videos found for your search",
+                    "next_page_token": search_data.get('nextPageToken'),
+                    "prev_page_token": search_data.get('prevPageToken')
+                }
+                cache.set(cache_key, result, timeout=3600)  # Cache for 1 hour
+                return result
+
             video_ids = []
             for item in search_data.get('items', []):
                 try:
@@ -70,28 +98,29 @@ def fetch_videos_by_keyword(query, max_results=10, educational_focus=True, conte
                         video_ids.append(item['id']['videoId'])
                 except (KeyError, TypeError) as e:
                     print(f"Error extracting video ID: {e}")
-            
+
             if not video_ids:
                 print("No valid video IDs found in the response")
-                # Return original data for debugging if no valid video IDs are found.
-                return {
-                    "results": [], 
+                result = {
+                    "results": [],
                     "message": "No valid videos found",
                     "debug_info": {
                         "response_structure": str(search_data.keys()),
                         "item_count": item_count
-                    }
+                    },
+                    "next_page_token": search_data.get('nextPageToken'),
+                    "prev_page_token": search_data.get('prevPageToken')
                 }
-            
-            # Get additional video details for better filtering.
+                cache.set(cache_key, result, timeout=3600)
+                return result
+
             detailed_results = get_video_details(video_ids)
-            
-            # Process and rank results by educational relevance.
-            processed_results = process_search_results(search_data, detailed_results, query)
-            
-            # If all results were filtered out, return original search items as a fallback.
+            processed_results = process_search_results(
+                search_data, detailed_results, query, min_duration, max_duration
+            )
+
             if not processed_results and item_count > 0:
-                print("All videos were filtered out by educational criteria, using basic results")
+                print("All videos were filtered out, using basic results")
                 basic_results = []
                 for item in search_data.get('items', []):
                     try:
@@ -107,44 +136,61 @@ def fetch_videos_by_keyword(query, max_results=10, educational_focus=True, conte
                         })
                     except (KeyError, TypeError) as e:
                         print(f"Error extracting basic video data: {e}")
-                
-                return {
+
+                result = {
                     "results": basic_results,
                     "query": query,
                     "total_results": len(basic_results),
-                    "note": "Using unfiltered results due to educational filter removing all items"
+                    "note": "Using unfiltered results due to filter removing all items",
+                    "next_page_token": search_data.get('nextPageToken'),
+                    "prev_page_token": search_data.get('prevPageToken')
                 }
-                
-            return {
+                cache.set(cache_key, result, timeout=3600)
+                return result
+
+            result = {
                 "results": processed_results,
                 "query": query,
-                "total_results": len(processed_results)
+                "total_results": len(processed_results),
+                "next_page_token": search_data.get('nextPageToken'),
+                "prev_page_token": search_data.get('prevPageToken')
             }
+            cache.set(cache_key, result, timeout=3600)
+            return result
         else:
             print(f"YouTube API Error: Status {response.status_code}")
             print(f"Response: {response.text}")
             return {"error": "Failed to fetch videos from YouTube", "status": response.status_code}
-            
+
     except Exception as e:
         print(f"Exception in fetch_videos_by_keyword: {str(e)}")
         return {"error": "An unexpected error occurred", "details": str(e)}
 
+
 def get_video_details(video_ids):
-    """Get additional details about videos to help with educational relevance filtering."""
+    """Get additional details about videos with caching."""
     if not video_ids:
         return {}
-        
+
+    cache_key = f"video_details:{','.join(video_ids)}"
+    cached_details = cache.get(cache_key)
+    
+    if cached_details:
+        print(f"Cache hit for video details: {cache_key}")
+        return cached_details
+
     params = {
         'part': 'snippet,contentDetails,statistics',
         'id': ','.join(video_ids),
         'key': API_KEY
     }
-    
+
     try:
         response = requests.get(VIDEO_URL, params=params)
         if response.status_code == 200:
             result = response.json()
             print(f"Retrieved details for {len(result.get('items', []))} videos")
+            cache.set(cache_key, result, timeout=86400)  # Cache for 24 hours
             return result
         else:
             print(f"Error fetching video details: {response.status_code}")
@@ -154,81 +200,83 @@ def get_video_details(video_ids):
         print(f"Error fetching video details: {str(e)}")
         return {}
 
-def process_search_results(search_data, detailed_results, original_query):
-    """Process and rank search results by educational relevance."""
+
+def process_search_results(search_data, detailed_results, original_query, min_duration=None, max_duration=None):
+    """Process and rank search results with enhanced relevance scoring."""
     processed_results = []
-    
-    # Create a set of educational keywords for filtering.
     edu_keywords = {
         'tutorial', 'learn', 'lesson', 'course', 'education', 'training',
         'guide', 'explanation', 'explained', 'introduction', 'basics',
         'how to', 'beginner', 'instructor', 'teaching', 'class', 'lecture'
     }
-    
-    # Get original query terms for relevance matching.
     query_terms = set(original_query.lower().split())
-    
+
     if not search_data.get('items'):
         print("No items in search_data to process")
         return processed_results
-        
-    # Store detailed video data in a dictionary for easier access.
+
     video_details = {}
     if detailed_results and 'items' in detailed_results:
         for item in detailed_results['items']:
             video_details[item['id']] = item
-    
+
     print(f"Processing {len(search_data.get('items', []))} search results")
-    
+
     for item in search_data['items']:
         try:
             video_id = item['id']['videoId']
             snippet = item['snippet']
             title = snippet.get('title', '')
             description = snippet.get('description', '')
-            
-            # Skip videos that are clearly not educational (this list can be expanded).
+
             if any(term in title.lower() for term in ['prank', 'funny fail', 'clickbait']):
                 print(f"Skipping non-educational video: {title}")
                 continue
-            
-            # Calculate an educational relevance score.
+
+            # Enhanced relevance scoring
             relevance_score = 0
-            
-            # Check title and description for educational keywords.
             content_text = (title + " " + description).lower()
             for keyword in edu_keywords:
                 if keyword in content_text:
-                    relevance_score += 1
-                    
-            # Add a bonus for exact query matches in the title.
+                    relevance_score += 2  # Increased weight for educational keywords
+
             title_words = set(title.lower().split())
             query_match_count = len(query_terms.intersection(title_words))
-            relevance_score += query_match_count * 2
-            
-            # Get additional metrics from detailed results.
+            relevance_score += query_match_count * 3  # Higher weight for query matches
+
             likes = 0
             comment_count = 0
             duration = "Unknown"
-            
+            duration_seconds = 0
+
             if video_id in video_details:
                 details = video_details[video_id]
-                # Parse statistics if available.
                 if 'statistics' in details:
                     stats = details['statistics']
                     likes = int(stats.get('likeCount', 0))
                     comment_count = int(stats.get('commentCount', 0))
-                    
-                    # Videos with higher engagement are often more helpful.
+                    # Engagement scoring
                     if likes > 1000:
-                        relevance_score += 1
+                        relevance_score += 2
                     if comment_count > 100:
                         relevance_score += 1
-                        
-                # Get video duration.
+
                 if 'contentDetails' in details:
                     duration = details['contentDetails'].get('duration', '')
-            
+                    # Convert ISO 8601 duration to seconds
+                    duration_match = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', duration)
+                    if duration_match:
+                        hours = int(duration_match.group(1) or 0)
+                        minutes = int(duration_match.group(2) or 0)
+                        seconds = int(duration_match.group(3) or 0)
+                        duration_seconds = hours * 3600 + minutes * 60 + seconds
+                        
+                        # Apply duration filters
+                        if min_duration and duration_seconds < min_duration:
+                            continue
+                        if max_duration and duration_seconds > max_duration:
+                            continue
+
             processed_results.append({
                 'id': video_id,
                 'title': title,
@@ -239,14 +287,26 @@ def process_search_results(search_data, detailed_results, original_query):
                 'relevance_score': relevance_score,
                 'likes': likes,
                 'comment_count': comment_count,
-                'duration': duration
+                'duration': duration,
+                'duration_seconds': duration_seconds
             })
         except (KeyError, TypeError) as e:
             print(f"Error processing search result item: {e}")
-    
+
     print(f"After filtering, {len(processed_results)} videos remain")
     
-    # Sort results by the calculated educational relevance score.
+    # Sort by relevance_score or other criteria basedsmouth
+
     processed_results.sort(key=lambda x: x['relevance_score'], reverse=True)
     
     return processed_results
+
+
+def invalidate_cache(query=None, video_id=None):
+    """Invalidate cache for specific query or video ID."""
+    if query:
+        # Invalidate all cache keys containing the query
+        cache_key_pattern = f"{query}:*"
+        cache.delete_pattern(cache_key_pattern)
+    if video_id:
+        cache.delete(f"video_details:{video_id}")
