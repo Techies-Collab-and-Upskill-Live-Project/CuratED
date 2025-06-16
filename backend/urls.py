@@ -28,7 +28,7 @@ from rest_framework_simplejwt.views import (
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="CurateD API",
+      title="CuratED API",
       default_version='v1',
       description="CurateD API Documentation",
       license=openapi.License(name="BSD License"),
