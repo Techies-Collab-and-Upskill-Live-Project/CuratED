@@ -125,10 +125,21 @@ SWAGGER_SETTINGS = {
 # Database configuration.
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('SUPABASE_DB_NAME'),
+        'USER': config('SUPABASE_DB_USER'),
+        'PASSWORD': config('SUPABASE_DB_PASSWORD'),
+        'HOST': config('SUPABASE_DB_HOST'),
+        'PORT': config('SUPABASE_DB_PORT', default=5432),
     }
 }
 
@@ -136,7 +147,7 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',  # Adjust Redis URL as needed
+        'LOCATION': 'redis://127.0.0.1:6379/1',  
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -144,7 +155,7 @@ CACHES = {
 }
 
 # Cache timeout (in seconds)
-CACHE_TIMEOUT = 3600  # 1 hour for search results
+CACHE_TIMEOUT = 3600  
 VIDEO_DETAILS_CACHE_TIMEOUT = 86400  # 24 hours for video details
 
 # Password validation settings.
