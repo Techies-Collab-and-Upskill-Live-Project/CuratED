@@ -165,14 +165,13 @@ class PlaylistReorderItemsAPIView(generics.GenericAPIView):
                     item_to_update.save(update_fields=['order'])
         except PlaylistItem.DoesNotExist as e:
             # Log this exception, as it indicates a potential flaw in validation logic if reached.
-            print(f"Error during reorder: {str(e)}") # Replace with actual logging
+            # logger.error(f"Error during reorder: {str(e)}") # Use logging if needed
             return Response(
                 {"error": "An internal error occurred: one or more item IDs became invalid during the reorder process."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR 
             )
         except Exception as e:
-            # Log the generic exception for server-side diagnostics.
-            print(f"Unexpected error during reorder: {str(e)}") # Replace with actual logging
+            # logger.error(f"Unexpected error during reorder: {str(e)}") # Use logging if needed
             return Response(
                 {"error": "An unexpected error occurred while reordering items."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -232,4 +231,5 @@ class PlaylistViewSet(viewsets.ModelViewSet):
         
         playlist.is_public = True
         playlist.save()
+        return Response({"message": "Playlist is now public"})
         return Response({"message": "Playlist is now public"})
