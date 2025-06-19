@@ -46,17 +46,7 @@ class RegisterView(CreateAPIView):
         user.otp_created = now()
         user.save()
 
-        try:
-            html = render_to_string('email/auth/verify_email.html', {'otp': otp, 'email': user.email})
-            send_resend_email(
-                to=user.email,
-                subject="Your CuratED OTP Verification Code",
-                template_name='email/auth/verify_email.html',
-                context={'otp': otp, 'email': user.email}
-            )
-            logger.info(f"OTP email sent to {user.email}")
-        except Exception as e:
-            logger.error(f"Error sending OTP email to {user.email}: {str(e)}")
+        print(f"OTP for {user.email}: {otp}")
 
         response_serializer = self.get_serializer(user)
         return Response({'message': 'User Successfully Created', 'data': response_serializer.data}, status=status.HTTP_201_CREATED)
