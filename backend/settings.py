@@ -153,10 +153,10 @@ DATABASES = {
 # }
 
 # Production Redis Configuration (using Redis Enterprise Cloud or similar)
-REDIS_HOST = config('REDIS_HOST', default='127.0.0.1')
-REDIS_PORT = config('REDIS_PORT', default='6379', cast=int)
-REDIS_PASSWORD = config('REDIS_PASSWORD', default=None)
-REDIS_DB_NUMBER = config('REDIS_DB_NUMBER', default='0', cast=int)
+REDIS_HOST = config('REDIS_HOST')
+REDIS_PORT = config('REDIS_PORT')
+REDIS_PASSWORD = config('REDIS_PASSWORD')
+REDIS_DB_NUMBER = config('REDIS_DB_NUMBER')
 
 CACHES = {
     'default': {
