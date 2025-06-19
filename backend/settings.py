@@ -168,7 +168,8 @@ CACHES = {
                 'ssl_cert_reqs': None,
                 'socket_connect_timeout': 15,  # seconds, default is usually 5 or None
                 'socket_timeout': 15,          # seconds, for read/write operations
-            }
+            },
+            "SSL": True,
         }
     }
 }
