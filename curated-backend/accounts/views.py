@@ -12,7 +12,9 @@ from django.conf import settings
 from django.utils.timezone import now
 from datetime import timedelta
 from .serializers import *
+from django.utils import timezone
 import random
+import secrets
 
 User = get_user_model()
 
@@ -22,7 +24,6 @@ class RegisterView(CreateAPIView):
     serializer_class = UserRegistrationSerializer
 
     def perform_create(self, serializer):
-        # Check if email exists first
         email = self.request.data.get("email")
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
@@ -35,50 +36,47 @@ class RegisterView(CreateAPIView):
                 {"error": "Email is already registered but not verified. Please check your email for the OTP or request a new one."}, 
                 status.HTTP_409_CONFLICT
             )
-
-        # Create user and send OTP
         user = serializer.save()
-        otp = f"{random.randint(1000,9999)}"
+        otp = f"{secrets.choice(range(1000, 10000))}"
         user.otp = otp
-        user.otp_created = now()
+        user.otp_created = timezone.now()
         user.save()
-
-        try:
-            send_mail(
-                'Verify your CuratED account',
-                f'Your verification code is: {otp}\nThis code will expire in 10 minutes.',
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
-            )
-        except Exception as e:
-            print(f"Error sending email: {str(e)}")
-
+        print(f"OTP for {user.email}: {otp}")
         return user
 
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        if not email or not password:
+            return Response({'detail': 'Email and password are required.'}, status=400)
+        if User.objects.filter(email=email).exists():
+            return Response({'detail': 'User with this email already exists.'}, status=400)
+        user = User.objects.create_user(email=email, password=password)
+        user.is_active = True
+        otp = str(random.randint(100000, 999999))
+        user.otp = otp
+        user.otp_expiry = timezone.now() + timezone.timedelta(minutes=10)
+        user.save()
+        print(f"OTP for {email}: {otp}")
+        return Response({'detail': 'User registered. OTP sent to your email.'}, status=201)
 
 class ResendVerificationView(CreateAPIView):
     permission_classes = [AllowAny]
-    serializer_class = EmailSerializer
-    
-    def create(self, request, *args, **kwargs):
+
+    def post(self, request):
         email = request.data.get('email')
+        if not email:
+            return Response({'detail': 'Email is required.'}, status=400)
         try:
-            user = User.objects.get(email=email, is_active=False)
-            otp = user.generate_otp()  # Using the model method we defined
-            
-            send_mail(
-                'Verify your CuratED account',
-                f'Your new verification code is: {otp}\nThis code will expire in 10 minutes.',
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
-            return Response({"message": "New verification code sent"}, status=status.HTTP_200_OK)
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
-            # For security, don't reveal whether the email exists
-            return Response({"message": "If this email exists, a verification code has been sent."}, 
-                          status=status.HTTP_200_OK)
+            return Response({'detail': 'User not found.'}, status=404)
+        otp = str(random.randint(100000, 999999))
+        user.otp = otp
+        user.otp_expiry = timezone.now() + timezone.timedelta(minutes=10)
+        user.save()
+        print(f"Resent OTP for {email}: {otp}")
+        return Response({'detail': 'OTP sent to your email.'}, status=200)
 
 class PasswordResetRequestView(CreateAPIView):
     permission_classes = [AllowAny]
@@ -171,3 +169,4 @@ class OTPVerifyView(CreateAPIView):
             return Response({"message": "Account verified successfully"}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            

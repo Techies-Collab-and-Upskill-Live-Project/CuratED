@@ -1,25 +1,15 @@
 from pathlib import Path
 from decouple import config
 import os
+from datetime import timedelta
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
-
-
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY',)
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
-
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
-
 CORS_ALLOW_ALL_ORIGINS = True
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -69,11 +59,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# Specifies the custom user model for authentication.
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
-# Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Change to SMTP in production
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_TEMPLATES = {
     'auth': {
         'verify_email': 'email/auth/verify_email.html',
@@ -95,17 +83,15 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
         'user': '1000/day',
-        'login': '5/minute',  # Limit login attempts
+        'login': '5/minute',
     }
 }
 
-from datetime import timedelta
-
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Short-lived access tokens.
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Longer refresh tokens for user convenience.
-    'ROTATE_REFRESH_TOKENS': True,                   # Generate a new refresh token upon refreshing.
-    'BLACKLIST_AFTER_ROTATION': True,                # Blacklist old refresh tokens after rotation.
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 } 
 
@@ -118,12 +104,8 @@ SWAGGER_SETTINGS = {
             'description': "Enter token as: **Bearer &lt;your-token&gt;**"
         }
     },
-    'USE_SESSION_AUTH': False,  # Disables Django's session authentication in Swagger UI if token authentication is preferred.
+    'USE_SESSION_AUTH': False,
 }
-
-
-# Database configuration.
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
@@ -131,10 +113,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-
-# Password validation settings.
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -153,33 +131,55 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
     {
-        'NAME': 'accounts.validators.PasswordComplexityValidator',  # Custom validator
+        'NAME': 'accounts.validators.PasswordComplexityValidator',
     }
 ]
 
-
-# Internationalization settings.
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images) configuration.
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
 
-# Default primary key field type configuration.
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOGS_DIR = BASE_DIR / 'logs'
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': str(LOGS_DIR / 'debug.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
+}
+
+TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
+
+FRONTEND_URL = config('FRONTEND_URL', default='https://devcurated.vercel.app/')
 # Ensure logs directory exists
 LOGS_DIR = BASE_DIR / 'logs'
 os.makedirs(LOGS_DIR, exist_ok=True)
@@ -219,4 +219,4 @@ LOGGING = {
 TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
 
 # Frontend URL for password reset links
-FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+FRONTEND_URL = config('FRONTEND_URL', default='https://devcurated.vercel.app/')
