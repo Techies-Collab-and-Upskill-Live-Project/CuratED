@@ -66,7 +66,14 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Change to SMTP in production
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.resend.com'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')  # Use your verified sender email
+EMAIL_HOST_PASSWORD = config('RESEND_API_KEY')
+EMAIL_USE_SSL = True
+DEFAULT_FROM_EMAIL = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')
+
 EMAIL_TEMPLATES = {
     'auth': {
         'verify_email': 'email/auth/verify_email.html',
@@ -132,10 +139,31 @@ DATABASES = {
 #     }
 # }
 
+# Production Redis Configuration (using Redis Enterprise Cloud or similar)
+# REDIS_HOST = config('REDIS_HOST', default='127.0.0.1')
+# REDIS_PORT = config('REDIS_PORT', default='6379', cast=int)
+# REDIS_PASSWORD = config('REDIS_PASSWORD', default=None)
+# REDIS_DB_NUMBER = config('REDIS_DB_NUMBER', default='0', cast=int)
+
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': f'rediss://{":" + REDIS_PASSWORD + "@" if REDIS_PASSWORD else ""}{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_NUMBER}',
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#             'CONNECTION_POOL_KWARGS': {
+#                 'ssl_cert_reqs': None,
+#                 'socket_connect_timeout': 15,  # seconds, default is usually 5 or None
+#                 'socket_timeout': 15,          # seconds, for read/write operations
+#             }
+#         }
+#     }
+# }
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379',  # This points to your local Redis server
+        'LOCATION': 'redis://127.0.0.1:6379',  # Adjust Redis URL as needed
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -236,8 +264,3 @@ FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 
 # Email templates directory
 TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
-
-# Frontend URL for password reset links
-FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
-# Frontend URL for password reset links
-FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
