@@ -1,6 +1,18 @@
 from rest_framework import serializers
 from .models import WatchedVideo, VideoFeedback, VideoComment, VideoProgress
 
+
+
+class YouTubeSearchSerializer(serializers.Serializer):
+    q = serializers.CharField(required=True)
+    max_results = serializers.IntegerField(default=25, min_value=1)  # Changed default to 25
+    educational_focus = serializers.BooleanField(default=True)
+    content_filter = serializers.ChoiceField(choices=['none', 'moderate', 'strict'], default='moderate')
+    min_duration = serializers.IntegerField(required=False, allow_null=True, default=None)
+    max_duration = serializers.IntegerField(required=False, allow_null=True, default=None)
+    sort_by = serializers.ChoiceField(choices=['relevance', 'date', 'viewCount', 'rating'], default='viewCount')  # Changed default
+    page_token = serializers.CharField(required=False, allow_null=True, default=None)
+
 class WatchedVideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = WatchedVideo

@@ -12,6 +12,7 @@ from .serializers import (
 )
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.db import models
 
 class PlaylistListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -164,14 +165,13 @@ class PlaylistReorderItemsAPIView(generics.GenericAPIView):
                     item_to_update.save(update_fields=['order'])
         except PlaylistItem.DoesNotExist as e:
             # Log this exception, as it indicates a potential flaw in validation logic if reached.
-            print(f"Error during reorder: {str(e)}") # Replace with actual logging
+            # logger.error(f"Error during reorder: {str(e)}") # Use logging if needed
             return Response(
                 {"error": "An internal error occurred: one or more item IDs became invalid during the reorder process."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR 
             )
         except Exception as e:
-            # Log the generic exception for server-side diagnostics.
-            print(f"Unexpected error during reorder: {str(e)}") # Replace with actual logging
+            # logger.error(f"Unexpected error during reorder: {str(e)}") # Use logging if needed
             return Response(
                 {"error": "An unexpected error occurred while reordering items."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -184,26 +184,52 @@ class PlaylistReorderItemsAPIView(generics.GenericAPIView):
         return Response(updated_playlist_serializer.data, status=status.HTTP_200_OK)
 
 class PlaylistViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
     serializer_class = PlaylistSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Playlist.objects.filter(user=self.request.user)
+        return Playlist.objects.filter(
+            models.Q(user=self.request.user) |
+            models.Q(shared_with=self.request.user) |
+            models.Q(is_public=True)
+        ).distinct()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     @action(detail=True, methods=['post'])
     def share(self, request, pk=None):
         playlist = self.get_object()
-        email = request.data.get('email')
+        if playlist.user != request.user:
+            return Response(
+                {"error": "You don't have permission to share this playlist"},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
+        email = request.data.get('email')
         if not email:
             return Response(
-                {'error': 'Email is required'}, 
+                {"error": "Email is required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+        
         if playlist.share_with_user(email):
-            return Response({'message': 'Playlist shared successfully'})
+            return Response({"message": "Playlist shared successfully"})
         return Response(
-            {'error': 'User not found'}, 
+            {"error": "User not found"},
             status=status.HTTP_404_NOT_FOUND
         )
+
+    @action(detail=True, methods=['post'])
+    def make_public(self, request, pk=None):
+        playlist = self.get_object()
+        if playlist.user != request.user:
+            return Response(
+                {"error": "You don't have permission to modify this playlist"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        playlist.is_public = True
+        playlist.save()
+        return Response({"message": "Playlist is now public"})
+        return Response({"message": "Playlist is now public"})
