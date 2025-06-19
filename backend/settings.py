@@ -164,11 +164,6 @@ CACHES = {
         'LOCATION': f'rediss://{":" + REDIS_PASSWORD + "@" if REDIS_PASSWORD else ""}{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_NUMBER}',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'CONNECTION_POOL_KWARGS': {
-                'ssl_cert_reqs': None,
-                'socket_connect_timeout': 15,  # seconds, default is usually 5 or None
-                'socket_timeout': 15,          # seconds, for read/write operations
-            },
             "SSL": True,
         }
     }
