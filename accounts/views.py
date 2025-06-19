@@ -19,30 +19,32 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 import random
 import secrets
+import logging
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 class RegisterView(CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = UserRegistrationSerializer
 
-    def perform_create(self, serializer):
-        # Check if email exists first
-        email = self.request.data.get("email")
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(email=email)
-            if user.is_active:
+    def create(self, request, *args, **kwargs):
+        email = request.data.get("email")
+        existing_user = User.objects.filter(email=email).first()
+        if existing_user:
+            if existing_user.is_active:
                 raise serializers.ValidationError(
-                    {"error": "Email is already registered and verified."}, 
-                    status.HTTP_409_CONFLICT
+                    {"error": "Email is already registered and verified."}
                 )
             raise serializers.ValidationError(
-                {"error": "Email is already registered but not verified. Please check your email for the OTP or request a new one."}, 
-                status.HTTP_409_CONFLICT
+                {"error": "Email is already registered but not verified. Please check your email for the OTP or request a new one."}
             )
 
-        # Create user and send OTP
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         user = serializer.save()
         otp = f"{secrets.choice(range(1000, 9999))}"
         user.otp = otp
@@ -61,7 +63,8 @@ class RegisterView(CreateAPIView):
         except Exception as e:
             logger.error(f"Error sending OTP email to {user.email}: {str(e)}")
 
-        return user
+        response_serializer = self.get_serializer(user)
+        return Response({'message': 'User Successfully Created', 'data': response_serializer.data}, status=status.HTTP_201_CREATED)
 
     def post(self, request):
         email = request.data.get('email')

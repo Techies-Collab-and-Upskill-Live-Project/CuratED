@@ -67,12 +67,12 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.resend.com'
-EMAIL_PORT = 465
-EMAIL_HOST_USER = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')  # Use your verified sender email
-EMAIL_HOST_PASSWORD = config('RESEND_API_KEY')
-EMAIL_USE_SSL = True
-DEFAULT_FROM_EMAIL = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')
+# EMAIL_HOST = 'smtp.resend.com'
+# EMAIL_PORT = 465
+# EMAIL_HOST_USER = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')  # Use your verified sender email
+# EMAIL_HOST_PASSWORD = config('RESEND_API_KEY')
+# EMAIL_USE_SSL = True
+# DEFAULT_FROM_EMAIL = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')
 
 EMAIL_TEMPLATES = {
     'auth': {
@@ -123,10 +123,21 @@ SWAGGER_SETTINGS = {
 # Database configuration.
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'USER': config('SUPABASE_DB_USER'),
+        'PASSWORD': config('SUPABASE_DB_PASSWORD'),
+        'HOST': config('SUPABASE_DB_HOST'),
+        'PORT': config('SUPABASE_DB_PORT'),
+        'NAME': config('SUPABASE_DB_NAME'),
     }
 }
 
@@ -215,6 +226,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type configuration.
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -222,6 +238,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Ensure logs directory exists
+BASE_DIR = Path(__file__).resolve().parent
 LOGS_DIR = BASE_DIR / 'logs'
 os.makedirs(LOGS_DIR, exist_ok=True)
 
