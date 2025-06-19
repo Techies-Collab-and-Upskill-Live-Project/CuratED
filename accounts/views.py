@@ -2,16 +2,21 @@ from rest_framework.generics import CreateAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+import logging
+
+logger = logging.getLogger(__name__)
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
-from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.timezone import now
 from datetime import timedelta
 from .serializers import *
+from api.email_utils import send_resend_email
+from django.template.loader import render_to_string
+from django.utils import timezone
 import random
 import secrets
 import logging
@@ -41,48 +46,84 @@ class RegisterView(CreateAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
-        otp = f"{secrets.choice(range(1000, 10000))}"
+        otp = f"{secrets.choice(range(1000, 9999))}"
         user.otp = otp
         user.otp_created = now()
         user.save()
 
         try:
-            send_mail(
-                'Verify your CuratED account',
-                f'Your verification code is: {otp}\nThis code will expire in 10 minutes.',
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
+            html = render_to_string('email/auth/verify_email.html', {'otp': otp, 'email': user.email})
+            send_resend_email(
+                to=user.email,
+                subject="Your CuratED OTP Verification Code",
+                template_name='email/auth/verify_email.html',
+                context={'otp': otp, 'email': user.email}
             )
+            logger.info(f"OTP email sent to {user.email}")
         except Exception as e:
-            logger.error(f"Error sending email: {str(e)}")
+            logger.error(f"Error sending OTP email to {user.email}: {str(e)}")
 
         response_serializer = self.get_serializer(user)
         return Response({'message': 'User Successfully Created', 'data': response_serializer.data}, status=status.HTTP_201_CREATED)
 
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        # ...other fields as needed...
+
+        if not email or not password:
+            return Response({'detail': 'Email and password are required.'}, status=400)
+        if User.objects.filter(email=email).exists():
+            return Response({'detail': 'User with this email already exists.'}, status=400)
+
+        user = User.objects.create_user(email=email, password=password)
+        user.is_active = True  # Or False if you want to require verification before login
+        otp = str(random.randint(1000, 9999))
+        user.otp = otp
+        user.otp_expiry = timezone.now() + timezone.timedelta(minutes=10)
+        user.save()
+
+        try:
+            html = render_to_string('email/auth/verify_email.html', {'otp': otp, 'email': email})
+            send_resend_email(
+                to=email,
+                subject="Your CuratED OTP Verification Code",
+                template_name='email/auth/verify_email.html',
+                context={'otp': otp, 'email': email}
+            )
+            logger.info(f"OTP email sent to {email}")
+        except Exception as e:
+            logger.error(f"Error sending OTP email to {email}: {str(e)}")
+        return Response({'detail': 'User registered. OTP sent to your email.'}, status=201)
+
 
 class ResendVerificationView(CreateAPIView):
     permission_classes = [AllowAny]
-    serializer_class = EmailSerializer
-    
-    def create(self, request, *args, **kwargs):
+
+    def post(self, request):
         email = request.data.get('email')
+        if not email:
+            return Response({'detail': 'Email is required.'}, status=400)
         try:
-            user = User.objects.get(email=email, is_active=False)
-            otp = user.generate_otp()  # Using the model method we defined
-            
-            send_mail(
-                'Verify your CuratED account',
-                f'Your new verification code is: {otp}\nThis code will expire in 10 minutes.',
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
-            return Response({"message": "New verification code sent"}, status=status.HTTP_200_OK)
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
-            # For security, don't reveal whether the email exists
-            return Response({"message": "If this email exists, a verification code has been sent."}, 
-                          status=status.HTTP_200_OK)
+            return Response({'detail': 'User not found.'}, status=404)
+        otp = str(random.randint(1000, 9999))
+        user.otp = otp
+        user.otp_expiry = timezone.now() + timezone.timedelta(minutes=10)
+        user.save()
+        try:
+            html = render_to_string('email/auth/verify_email.html', {'otp': otp, 'email': email})
+            send_resend_email(
+                to=email,
+                subject="Your CuratED OTP Verification Code",
+                template_name='email/auth/verify_email.html',
+                context={'otp': otp, 'email': email}
+            )
+            logger.info(f"Resent OTP email to {email}")
+        except Exception as e:
+            logger.error(f"Error resending OTP email to {email}: {str(e)}")
+        return Response({'detail': 'OTP sent to your email.'}, status=200)
 
 class PasswordResetRequestView(CreateAPIView):
     permission_classes = [AllowAny]
@@ -96,13 +137,16 @@ class PasswordResetRequestView(CreateAPIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             
             reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
-            send_mail(
-                'Reset your CuratED password',
-                f'Click this link to reset your password: {reset_link}\nThis link will expire in 24 hours.',
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
+            html_context = {'reset_link': reset_link, 'email': email}
+            send_resend_email(
+                to=email,
+                subject="CuratED Password Reset",
+                template_name='email/auth/password_reset.html',
+                context={'reset_link': reset_link, 'email': email}
             )
+            logger.info(f"Password reset email sent to {email}")
+        except Exception as e:
+            logger.error(f"Error sending password reset email to {email}: {str(e)}")
         except User.DoesNotExist:
             pass  # Silently handle non-existent emails
         
