@@ -67,12 +67,12 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.resend.com'
-EMAIL_PORT = 465
-EMAIL_HOST_USER = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')  # Use your verified sender email
-EMAIL_HOST_PASSWORD = config('RESEND_API_KEY')
-EMAIL_USE_SSL = True
-DEFAULT_FROM_EMAIL = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')
+# EMAIL_HOST = 'smtp.resend.com'
+# EMAIL_PORT = 465
+# EMAIL_HOST_USER = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')  # Use your verified sender email
+# EMAIL_HOST_PASSWORD = config('RESEND_API_KEY')
+# EMAIL_USE_SSL = True
+# DEFAULT_FROM_EMAIL = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')
 
 EMAIL_TEMPLATES = {
     'auth': {
@@ -238,6 +238,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Ensure logs directory exists
+BASE_DIR = Path(__file__).resolve().parent
 LOGS_DIR = BASE_DIR / 'logs'
 os.makedirs(LOGS_DIR, exist_ok=True)
 
