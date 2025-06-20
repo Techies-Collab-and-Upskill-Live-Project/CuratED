@@ -66,7 +66,9 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@curatedapp.com'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.resend.com'
 # EMAIL_PORT = 465
 # EMAIL_HOST_USER = config('RESEND_SMTP_USER', default='noreply@yourdomain.com')  # Use your verified sender email
@@ -151,10 +153,10 @@ DATABASES = {
 # }
 
 # Production Redis Configuration (using Redis Enterprise Cloud or similar)
-REDIS_HOST = config('REDIS_HOST', default='127.0.0.1')
-REDIS_PORT = config('REDIS_PORT', default='6379', cast=int)
-REDIS_PASSWORD = config('REDIS_PASSWORD', default=None)
-REDIS_DB_NUMBER = config('REDIS_DB_NUMBER', default='0', cast=int)
+REDIS_HOST = config('REDIS_HOST')
+REDIS_PORT = config('REDIS_PORT')
+REDIS_PASSWORD = config('REDIS_PASSWORD')
+REDIS_DB_NUMBER = config('REDIS_DB_NUMBER')
 
 CACHES = {
     'default': {
@@ -162,24 +164,20 @@ CACHES = {
         'LOCATION': f'rediss://{":" + REDIS_PASSWORD + "@" if REDIS_PASSWORD else ""}{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_NUMBER}',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'CONNECTION_POOL_KWARGS': {
-                'ssl_cert_reqs': None,
-                'socket_connect_timeout': 15,  # seconds, default is usually 5 or None
-                'socket_timeout': 15,          # seconds, for read/write operations
-            }
+            "SSL": True,
         }
     }
 }
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379',  # Adjust Redis URL as needed
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    }
-}
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379',  # Adjust Redis URL as needed
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         }
+#     }
+# }
 
 # Cache timeout settings
 CACHE_TIMEOUT = 3600  # 1 hour for search results
