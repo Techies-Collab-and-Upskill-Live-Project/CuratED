@@ -158,13 +158,19 @@ REDIS_PORT = config('REDIS_PORT')
 REDIS_PASSWORD = config('REDIS_PASSWORD')
 REDIS_DB_NUMBER = config('REDIS_DB_NUMBER')
 
+if not all([REDIS_HOST, REDIS_PORT]):
+    raise ValueError("Redis host and port must be set")
+
+# Build the location string safely
+REDIS_LOCATION = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_NUMBER}"
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'rediss://{":" + REDIS_PASSWORD + "@" if REDIS_PASSWORD else ""}{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_NUMBER}',
+        'LOCATION': REDIS_LOCATION,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            "SSL": True,
+            'SSL': True,
         }
     }
 }
