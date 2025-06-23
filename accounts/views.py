@@ -12,7 +12,6 @@ from django.conf import settings
 from django.utils.timezone import now
 from datetime import timedelta
 from .serializers import *
-# from api.email_utils import send_resend_email
 from django.template.loader import render_to_string
 from django.utils import timezone
 import random
@@ -22,55 +21,50 @@ from django.core.mail import send_mail
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
-
-
-
 class RegisterView(CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = UserRegistrationSerializer
 
     def create(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        password = request.data.get('password')
-
-        if not email or not password:
-            return Response({'detail': 'Email and password are required.'}, status=400)
-
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        email = serializer.validated_data.get('email')
         existing_user = User.objects.filter(email=email).first()
         if existing_user:
             if existing_user.is_active:
-                raise serializers.ValidationError(
-                    {"error": "Email is already registered and verified."}
-                )
-            raise serializers.ValidationError(
-                {"error": "Email is already registered but not verified. Please check your email for the OTP or request a new one."}
-            )
+                raise serializers.ValidationError({"error": "Email is already registered and verified."})
+            raise serializers.ValidationError({"error": "Email is already registered but not verified. Please check your email for the OTP or request a new one."})
 
-        # Create user
-        user = User.objects.create_user(email=email, password=password)
+        user = serializer.save()
         user.is_active = False
+        
         otp = str(random.randint(1000, 9999))
         user.otp = otp
-        user.otp_expiry = timezone.now() + timezone.timedelta(minutes=10)
+        user.otp_created = now()
         user.save()
 
-        # Send OTP using Django's email system (goes to console in dev)
-        subject = "Your OTP Verification Code"
-        message = f"Hello,\n\nYour OTP code is: {otp}\nIt expires in 10 minutes.\n\nThanks."
-        from_email = settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else None
-
+        subject = "Your CuratED OTP Verification Code"
+        html_message = render_to_string('email/auth/verify_email.html', {'otp': otp, 'email': email})
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
+        
         try:
-            send_mail(subject, message, from_email, [email])
+            send_mail(
+                subject,
+                '',
+                from_email,
+                [email],
+                html_message=html_message,
+                fail_silently=False,
+            )
             logger.info(f"OTP email sent to {email}")
         except Exception as e:
             logger.error(f"Error sending OTP email to {email}: {str(e)}")
 
-        serializer = self.get_serializer(user)
         return Response(
-            {'message': 'User registered. OTP sent via email (console backend).', 'data': serializer.data},
+            {'message': 'User registered. OTP sent to your email.', 'data': serializer.data},
             status=status.HTTP_201_CREATED
         )
-
 
 class ResendVerificationView(CreateAPIView):
     permission_classes = [AllowAny]
@@ -87,20 +81,27 @@ class ResendVerificationView(CreateAPIView):
 
         otp = str(random.randint(1000, 9999))
         user.otp = otp
-        user.otp_expiry = timezone.now() + timezone.timedelta(minutes=10)
+        user.otp_created = now()
         user.save()
 
-        subject = "Your OTP Verification Code"
-        message = f"Hello,\n\nYour new OTP code is: {otp}\nIt expires in 10 minutes.\n\nThanks."
-        from_email = settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else None
+        subject = "Your CuratED OTP Verification Code"
+        html_message = render_to_string('email/auth/verify_email.html', {'otp': otp, 'email': email})
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
 
         try:
-            send_mail(subject, message, from_email, [email])
+            send_mail(
+                subject,
+                '',
+                from_email,
+                [email],
+                html_message=html_message,
+                fail_silently=False,
+            )
             logger.info(f"Resent OTP email to {email}")
         except Exception as e:
             logger.error(f"Error resending OTP email to {email}: {str(e)}")
 
-        return Response({'detail': 'OTP resent via email.'}, status=200)
+        return Response({'detail': 'OTP resent to your email.'}, status=200)
 
 class PasswordResetRequestView(CreateAPIView):
     permission_classes = [AllowAny]
@@ -116,19 +117,21 @@ class PasswordResetRequestView(CreateAPIView):
             reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
 
             subject = "Password Reset Request"
-            message = (
-                f"Hello,\n\n"
-                f"You requested a password reset. Use the link below:\n"
-                f"{reset_link}\n\n"
-                f"If you did not request this, please ignore this email."
-            )
-            from_email = settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else None
+            html_message = render_to_string('email/auth/password_reset.html', {'reset_link': reset_link, 'email': email})
+            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
 
-            send_mail(subject, message, from_email, [email])
+            send_mail(
+                subject,
+                '',
+                from_email,
+                [email],
+                html_message=html_message,
+                fail_silently=False,
+            )
             logger.info(f"Password reset link sent to {email}")
 
         except User.DoesNotExist:
-            pass  # Do not reveal whether the user exists
+            pass
         except Exception as e:
             logger.error(f"Error sending password reset email to {email}: {str(e)}")
 
@@ -193,9 +196,6 @@ class OTPVerifyView(CreateAPIView):
             return Response({"message": "Account verified successfully"}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        email = serializer.validated_data['email']
-        otp = serializer.validated_data['otp']
         
         try:
             user = User.objects.get(email=email)

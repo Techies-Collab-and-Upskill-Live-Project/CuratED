@@ -77,15 +77,19 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Password Reset Request
+
 - **POST** `/api/v1/users/password-reset/`
 - **Payload:**
+
   ```json
   {
     "email": "user@example.com"
   }
   ```
+
 - **Response:**  
   `200 OK`  
+
   ```json
   { "message": "If this email exists, password reset instructions have been sent." }
   ```
@@ -93,8 +97,10 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Password Reset Confirm
+
 - **POST** `/api/v1/users/password-reset/confirm/`
 - **Payload:**
+
   ```json
   {
     "uid": "base64_user_id",
@@ -102,8 +108,10 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
     "new_password": "NewPassword123"
   }
   ```
+
 - **Response:**  
   `200 OK`  
+
   ```json
   { "message": "Password reset successful" }
   ```
@@ -111,18 +119,22 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Change Password (Authenticated)
+
 - **PUT** `/api/v1/users/password/change/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
 - **Payload:**
+
   ```json
   {
     "old_password": "OldPassword123",
     "new_password": "NewPassword123"
   }
   ```
+
 - **Response:**  
   `200 OK`  
+
   ```json
   { "message": "Password updated successfully" }
   ```
@@ -132,6 +144,7 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ## YouTube & Video Content
 
 ### Search YouTube
+
 - **GET** `/api/v1/search/?q=python&max_results=10&educational_focus=true`
 - **Query Params:**
   - `q` (required): Search keywords
@@ -144,6 +157,7 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
   - `page_token` (optional): for pagination
 - **Response:**  
   `200 OK`  
+
   ```json
   {
     "results": [ ...video objects... ],
@@ -157,10 +171,12 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Mark Video as Watched
+
 - **POST** `/api/v1/progress/mark/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
 - **Payload:**
+
   ```json
   {
     "video_id": "abc123",
@@ -174,8 +190,10 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
     "duration": "12:34"
   }
   ```
+
 - **Response:**  
   `201 Created`  
+
   ```json
   { ...watched video object... }
   ```
@@ -183,11 +201,13 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Get Watched Videos
+
 - **GET** `/api/v1/progress/list/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
 - **Response:**  
   `200 OK`  
+
   ```json
   [ ...list of watched video objects... ]
   ```
@@ -195,10 +215,12 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Submit Video Feedback
+
 - **POST** `/api/v1/feedback/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
 - **Payload:**
+
   ```json
   {
     "video_id": "abc123",
@@ -207,8 +229,10 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
     "helpful": true
   }
   ```
+
 - **Response:**  
   `201 Created`  
+
   ```json
   { ...feedback object... }
   ```
@@ -216,6 +240,7 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Get/Update/Delete Video Feedback
+
 - **GET/PUT/DELETE** `/api/v1/feedback/<video_id>/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
@@ -227,10 +252,12 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Update Video Progress
+
 - **PUT** `/api/v1/videos/<video_id>/progress/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
 - **Payload:**
+
   ```json
   {
     "current_time": 120,
@@ -238,8 +265,10 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
     "percentage_watched": 20
   }
   ```
+
 - **Response:**  
   `200 OK`  
+
   ```json
   { ...progress object... }
   ```
@@ -249,18 +278,22 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ## Playlists
 
 ### Create Playlist
+
 - **POST** `/api/v1/playlists/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
 - **Payload:**
+
   ```json
   {
     "name": "My Playlist",
     "description": "A collection of my favorite videos"
-  }
+  }  
   ```
+
 - **Response:**  
   `201 Created`  
+
   ```json
   { ...playlist object... }
   ```
@@ -268,11 +301,13 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### List User Playlists
+
 - **GET** `/api/v1/playlists/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
 - **Response:**  
   `200 OK`  
+
   ```json
   [ ...list of playlist objects... ]
   ```
@@ -280,10 +315,12 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Add Video to Playlist
+
 - **POST** `/api/v1/playlists/<playlist_id>/add/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
 - **Payload:**
+
   ```json
   {
     "video_id": "abc123",
@@ -294,8 +331,10 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
     "published_at": "2024-01-01T00:00:00Z"
   }
   ```
+
 - **Response:**  
   `201 Created`  
+
   ```json
   { ...playlist item object... }
   ```
@@ -303,6 +342,7 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Remove Video from Playlist
+
 - **DELETE** `/api/v1/playlists/<playlist_id>/remove/<video_id>/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
@@ -312,11 +352,13 @@ This document lists all major API endpoints, their HTTP methods, payloads, and e
 ---
 
 ### Get Playlist Details
+
 - **GET** `/api/v1/playlists/<playlist_id>/`
 - **Headers:**  
   `Authorization: Bearer <access_token>`
 - **Response:**  
   `200 OK`  
+  
   ```json
   { ...playlist object with items... }
   ```
