@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Your CuratED Account</title>
+    <style>
+        body {
+            background: #fff8f0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #222;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 420px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(255, 140, 0, 0.08);
+            padding: 32px 28px 28px 28px;
+            border-top: 6px solid #ff8800;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .logo-text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff8800;
+            letter-spacing: 2px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .otp-box {
+            background: #fff3e0;
+            color: #ff8800;
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 6px;
+            padding: 18px 0;
+            border-radius: 8px;
+            text-align: center;
+            margin: 24px 0 16px 0;
+            border: 2px dashed #ff8800;
+        }
+        .footer {
+            margin-top: 32px;
+            font-size: 0.95rem;
+            color: #888;
+            text-align: center;
+        }
+        .highlight {
+            color: #ff8800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <span class="logo-text">CuratED</span>
+        </div>
+        <h2 style="color:#ff8800; margin-bottom: 8px;">Verify Your Email</h2>
+        <p>Hi there,</p>
+        <p>Use the OTP code below to verify your CuratED account:</p>
+        <div class="otp-box">{{ otp }}</div>
+        <p>This code will expire in <span class="highlight">10 minutes</span>.</p>
+        <p>If you didn't request this, you can safely ignore this email.</p>
+        <div class="footer">
+            &copy; {{ year|default:"2025" }} CuratED. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

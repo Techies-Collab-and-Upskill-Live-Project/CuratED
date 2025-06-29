@@ -3,12 +3,15 @@
 ## Authentication Endpoints
 
 ### Register User
+
 ```http
 POST /api/v1/users/register/
 ```
+
 Register a new user with email verification.
 
 **Request Body:**
+
 ```json
 {
     "email": "user@example.com",
@@ -19,12 +22,15 @@ Register a new user with email verification.
 ```
 
 ### Login
+
 ```http
 POST /api/v1/token/
 ```
+
 Obtain JWT tokens for authentication.
 
 **Request Body:**
+
 ```json
 {
     "email": "user@example.com",
@@ -36,12 +42,15 @@ Obtain JWT tokens for authentication.
 ## Content Endpoints
 
 ### Search Videos
+
 ```http
 GET /api/v1/search/
 ```
+
 Search for educational videos with advanced filtering.
 
 **Query Parameters:**
+
 - `q` (required): Search query
 - `max_results`: Maximum results (default: 10)
 - `educational_focus`: Filter for educational content (default: true)
@@ -51,12 +60,15 @@ Search for educational videos with advanced filtering.
 - `sort_by`: Sorting criteria (relevance/date/viewCount/rating)
 
 ### Track Progress
+
 ```http
 POST /api/v1/videos/{video_id}/progress/
 ```
+
 Update video watching progress.
 
 **Request Body:**
+
 ```json
 {
     "current_time": 120.5,
@@ -68,12 +80,15 @@ Update video watching progress.
 ## Playlist Management
 
 ### Create Playlist
+
 ```http
 POST /api/v1/playlists/
 ```
+
 Create a new playlist.
 
 **Request Body:**
+
 ```json
 {
     "name": "Python Tutorials",
@@ -83,12 +98,15 @@ Create a new playlist.
 ```
 
 ### Share Playlist
+
 ```http
 POST /api/v1/playlists/{playlist_id}/share/
 ```
+
 Share playlist with another user.
 
 **Request Body:**
+
 ```json
 {
     "email": "friend@example.com"
