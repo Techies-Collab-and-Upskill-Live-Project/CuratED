@@ -73,16 +73,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         # The method return the first_name, with a space in between.
         return self.first_name
-
-class TokenTracker(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    jti = models.CharField(max_length=255)  # JWT ID
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-    is_blacklisted = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.user.email} - {self.jti}"

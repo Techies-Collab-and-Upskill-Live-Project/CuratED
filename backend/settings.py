@@ -239,7 +239,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Default primary key field type configuration.
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.UUIDField'  # Change from BigAutoField to UUIDField
 
 # Ensure logs directory exists
 BASE_DIR = Path(__file__).resolve().parent
