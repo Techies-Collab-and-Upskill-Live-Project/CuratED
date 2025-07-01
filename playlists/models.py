@@ -1,25 +1,24 @@
 from django.db import models
-from django.conf import settings
-from django.utils import timezone
+from django.contrib.auth import get_user_model
 import uuid
+
+User = get_user_model()
 
 class Playlist(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='playlists')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='playlists')
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_public = models.BooleanField(default=False)
     shared_with = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
+        User,
         related_name='shared_playlists',
         blank=True
     )
 
     def share_with_user(self, user_email):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
         try:
             user = User.objects.get(email=user_email)
             self.shared_with.add(user)
@@ -58,4 +57,5 @@ class PlaylistItem(models.Model):
         if self.order is None: # Auto-increment order if not set
             last_item = PlaylistItem.objects.filter(playlist=self.playlist).order_by('-order').first()
             self.order = (last_item.order + 1) if last_item else 1
+        super().save(*args, **kwargs)
         super().save(*args, **kwargs)

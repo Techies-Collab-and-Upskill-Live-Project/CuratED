@@ -229,17 +229,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images) configuration.
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# Static files configuration
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    BASE_DIR / 'static',  # Changed to use Path instead of os.path.join
 ]
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type configuration.
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.UUIDField'  # Change from BigAutoField to UUIDField
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Ensure logs directory exists
 BASE_DIR = Path(__file__).resolve().parent
@@ -282,6 +280,3 @@ TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
 
 # Frontend URL for password reset links
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
-
-# Email templates directory
-TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']

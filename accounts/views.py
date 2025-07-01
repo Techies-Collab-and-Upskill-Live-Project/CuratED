@@ -181,6 +181,7 @@ class OTPVerifyView(CreateAPIView):
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
         otp = serializer.validated_data['otp']
+        
         try:
             user = User.objects.get(email=email)
             if user.is_active:
@@ -189,6 +190,7 @@ class OTPVerifyView(CreateAPIView):
                 return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
             if not user.otp_created or now() - user.otp_created > timedelta(minutes=10):
                 return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
+            
             user.is_active = True
             user.otp = None
             user.otp_created = None
@@ -196,8 +198,6 @@ class OTPVerifyView(CreateAPIView):
             return Response({"message": "Account verified successfully"}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        try:
             user = User.objects.get(email=email)
             if user.is_active:
                 return Response({"message": "Account already verified"}, status=status.HTTP_200_OK)

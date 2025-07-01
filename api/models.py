@@ -1,13 +1,15 @@
 from django.db import models
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 
+User = get_user_model()
+
 class WatchedVideo(models.Model):
     # I used settings.AUTH_USER_MODEL instead of directly referencing User because of the custom user model
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='watched_videos')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='watched_videos')
     video_id = models.CharField(max_length=100, db_index=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -27,7 +29,8 @@ class WatchedVideo(models.Model):
         return f"{self.title} watched by {self.user.get_full_name()}"
 
 class VideoFeedback(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     video_id = models.CharField(max_length=100)
     rating = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
@@ -46,7 +49,8 @@ class VideoFeedback(models.Model):
         return f"{self.user.email}'s feedback on {self.video_id}"
 
 class VideoComment(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     video_id = models.CharField(max_length=100)
     text = models.TextField()
     timestamp = models.FloatField(help_text="Video timestamp in seconds")
@@ -62,7 +66,8 @@ class VideoComment(models.Model):
         return f"Comment by {self.user.email} at {self.timestamp}s"
 
 class VideoProgress(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     video_id = models.CharField(max_length=100)
     current_time = models.FloatField(default=0)
     duration = models.FloatField()

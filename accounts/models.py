@@ -10,7 +10,7 @@ class CustomUserManager(BaseUserManager):
     
     # This class creates the user with the given email and password instead of django username as login requirement.
     def create_user(self, email, password=None, **extra_fields):
-    #    This method creates and saves normal user with the given email and password.
+    #    This methodo creates and saves normal user with the given email and password.
     
         if not email:
             raise ValueError(_('The Email must be set'))
@@ -71,5 +71,5 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return full_name.strip()
 
     def get_short_name(self):
-        # The method return the first_name, with a space in between.
+        return self.first_name
         return self.first_name

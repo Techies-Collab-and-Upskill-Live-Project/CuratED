@@ -14,7 +14,6 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
 from django.urls import path, include
 from django.urls import re_path
 from rest_framework import permissions
@@ -38,9 +37,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/v1/', include('api.urls')), # Includes existing API URLs.
-    path('api/v1/', include('playlists.urls')), # Adds playlists app URLs, prefixed with api/.
+    # path('admin/', admin.site.urls),  # Comment this out since admin is not installed
+    path('api/v1/', include('api.urls')),
+    path('api/v1/', include('playlists.urls')),
     path('api/v1/users/', include('accounts.urls')),
     path('api/v1/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
