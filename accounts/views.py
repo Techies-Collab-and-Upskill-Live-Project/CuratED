@@ -81,7 +81,7 @@ class ResendVerificationView(CreateAPIView):
 
         otp = str(random.randint(1000, 9999))
         user.otp = otp
-        user.otp_created = now()
+        user.otp_created = now()  # Fixed field name to match model
         user.save()
 
         subject = "Your CuratED OTP Verification Code"
