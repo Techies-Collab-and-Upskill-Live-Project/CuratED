@@ -231,9 +231,6 @@ USE_TZ = True
 
 # Static files configuration
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',  # Changed to use Path instead of os.path.join
-]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type configuration.
@@ -274,9 +271,6 @@ LOGGING = {
         },
     },
 }
-
-# Email templates directory
-TEMPLATES[0]['DIRS'] = [BASE_DIR / 'templates']
 
 # Frontend URL for password reset links
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
