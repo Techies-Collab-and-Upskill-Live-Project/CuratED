@@ -198,21 +198,3 @@ class OTPVerifyView(CreateAPIView):
             return Response({"message": "Account verified successfully"}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-            user = User.objects.get(email=email)
-            if user.is_active:
-                return Response({"message": "Account already verified"}, status=status.HTTP_200_OK)
-            
-            if user.otp != otp:
-                return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            if not user.otp_created or now() - user.otp_created > timedelta(minutes=10):
-                return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            user.is_active = True
-            user.otp = None
-            user.otp_created = None
-            user.save()
-            
-            return Response({"message": "Account verified successfully"}, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
