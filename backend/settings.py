@@ -10,7 +10,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
-CORS_ALLOWED_ORIGINS = 'devcurated.vercel.app', 'localhost:3000'
+CORS_ALLOWED_ORIGINS = [
+    "https://devcurated.vercel.app",
+    "http://localhost:3000",
+]
 YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
 
 # Application definition
