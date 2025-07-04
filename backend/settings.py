@@ -145,14 +145,15 @@ DATABASES = {
 
 
 # For development, use the simpler cache backend
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-#         'LOCATION': 'unique-snowflake',
-#     }
-# }
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
 
-# Production Redis Configuration (using Redis Enterprise Cloud or similar)
+# Comment out Redis configuration (keep it for reference)
+"""
 REDIS_HOST = config('REDIS_HOST')
 REDIS_PORT = config('REDIS_PORT')
 REDIS_PASSWORD = config('REDIS_PASSWORD')
@@ -170,20 +171,10 @@ CACHES = {
         'LOCATION': REDIS_LOCATION,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            # 'SSL': True,
         }
     }
 }
-
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django_redis.cache.RedisCache',
-#         'LOCATION': 'redis://127.0.0.1:6379',  # Adjust Redis URL as needed
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#         }
-#     }
-# }
+"""
 
 # Cache timeout settings
 CACHE_TIMEOUT = 3600  # 1 hour for search results
