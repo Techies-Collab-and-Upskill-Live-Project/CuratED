@@ -11,8 +11,10 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = [
     "https://devcurated.vercel.app",
+    "https://prodcurated.vercel.app",
     "http://localhost:3000",
     "devcurated.vercel.app",
+    "prodcurated.vercel.app",
     "localhost:3000",
     'slimy-libby-htcode-d75a500b.koyeb.app',
 ]
