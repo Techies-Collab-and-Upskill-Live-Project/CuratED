@@ -54,7 +54,7 @@ class PlaylistItem(models.Model):
         return f"{self.order}. {self.title} in {self.playlist.name}"
 
     def save(self, *args, **kwargs):
-        if self.order is None: # Auto-increment order if not set
+        if self.order is None:  # Auto-increment order if not set
             last_item = PlaylistItem.objects.filter(playlist=self.playlist).order_by('-order').first()
             self.order = (last_item.order + 1) if last_item else 1
         super().save(*args, **kwargs)
