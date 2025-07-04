@@ -3,6 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from django.contrib.auth import get_user_model
 import uuid
+import time
 
 class IntegrationTests(APITestCase):
     def setUp(self):
@@ -60,12 +61,12 @@ class IntegrationTests(APITestCase):
         # 6. Add to Playlist
         playlist_id = playlist_response.data['id']
         # Make the video_id more unique to avoid conflicts
-        video_id = f"test_video_{uuid.uuid4()}"
+        video_id = f"test_video_{time.time_ns()}"
         
-        # Try direct URL or skip this test temporarily
+        # Use the correct URL pattern from api_inspector.py
         try:
             add_video_response = self.client.post(
-                f'/api/v1/playlists/{playlist_id}/items/',
+                f'/api/v1/playlists/{playlist_id}/items/',  # Matches 'playlist-add-item'
                 {'video_id': video_id, 'title': 'Test Video', 'order': 1}
             )
             # Print actual status for debugging
