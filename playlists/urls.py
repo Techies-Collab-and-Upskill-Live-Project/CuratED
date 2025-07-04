@@ -13,7 +13,6 @@ urlpatterns = [
 # /playlists/ (list, create)
 # /playlists/{id}/ (retrieve, update, delete)
 # /playlists/{id}/share/ (custom action)
-    path('', include(router.urls)),
     path('playlists/', PlaylistListCreateAPIView.as_view(), name='playlist-list-create'),
     path('playlists/<uuid:pk>/', PlaylistRetrieveUpdateDestroyAPIView.as_view(), name='playlist-detail'), 
     path('playlists/<uuid:playlist_pk>/items/', AddVideoToPlaylistAPIView.as_view(), name='playlist-add-item'),
