@@ -14,6 +14,7 @@ ALLOWED_HOSTS = [
     "http://localhost:3000",
     "devcurated.vercel.app",
     "localhost:3000",
+    'slimy-libby-htcode-d75a500b.koyeb.app',
 ]
 CORS_ALLOWED_ORIGINS = [
     "https://devcurated.vercel.app",
