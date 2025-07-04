@@ -9,7 +9,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Core Settings
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
+ALLOWED_HOSTS = [
+    "https://devcurated.vercel.app",
+    "http://localhost:3000",
+    "devcurated.vercel.app",
+    "localhost:3000",
+    'slimy-libby-htcode-d75a500b.koyeb.app',
+]
+CORS_ALLOWED_ORIGINS = [
+    "https://devcurated.vercel.app",
+    "http://localhost:3000",
+    "devcurated.vercel.app",
+    "localhost:3000",
+]
 YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
 
 # Application definition
@@ -34,12 +46,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'accounts.middleware.TokenHandlerMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
