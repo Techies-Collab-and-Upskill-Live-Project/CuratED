@@ -36,12 +36,22 @@ class YouTubeSearchAPIView(ListAPIView):
         params_serializer = self.get_serializer(data=self.request.query_params)
         params_serializer.is_valid(raise_exception=True)
         
+        # Caution - direct attribute access will raise AttributeError if attributes don't exist
+        # Only use this approach if you're sure pagination_token and prev_token are always set
+        try:
+            next_page = self.pagination_token
+            prev_page = self.prev_token
+        except AttributeError:
+            # Fallback to None if attributes don't exist
+            next_page = None
+            prev_page = None
+        
         return Response({
             'results': results,
             'query': params_serializer.validated_data['q'],
             'total_results': len(results),
-            'next_page_token': getattr(self, 'pagination_token', None),
-            'prev_page_token': getattr(self, 'prev_token', None)
+            'next_page_token': next_page,
+            'prev_page_token': prev_page
         }, status=status.HTTP_200_OK)
         
 
@@ -106,23 +116,4 @@ class VideoProgressUpdateView(CreateModelMixin, RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         serializer.save(user=self.request.user)
         invalidate_cache(video_id=self.kwargs.get('video_id'))
-        invalidate_cache(video_id=self.kwargs.get('video_id'))
-
-
-class VideoProgressUpdateView(CreateModelMixin, RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = VideoProgressSerializer
-    lookup_field = 'video_id'
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    def get_queryset(self):
-        return VideoProgress.objects.filter(user=self.request.user)
-
-    def perform_update(self, serializer):
-        serializer.save(user=self.request.user)
         invalidate_cache(video_id=self.kwargs.get('video_id'))
