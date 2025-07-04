@@ -9,7 +9,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Core Settings
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
+ALLOWED_HOSTS = [
+    "https://devcurated.vercel.app",
+    "http://localhost:3000",
+    "devcurated.vercel.app",
+    "localhost:3000",
+]
 CORS_ALLOWED_ORIGINS = [
     "https://devcurated.vercel.app",
     "http://localhost:3000",
