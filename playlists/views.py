@@ -232,4 +232,3 @@ class PlaylistViewSet(viewsets.ModelViewSet):
         playlist.is_public = True
         playlist.save()
         return Response({"message": "Playlist is now public"})
-        return Response({"message": "Playlist is now public"})
