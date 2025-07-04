@@ -58,4 +58,3 @@ class PlaylistItem(models.Model):
             last_item = PlaylistItem.objects.filter(playlist=self.playlist).order_by('-order').first()
             self.order = (last_item.order + 1) if last_item else 1
         super().save(*args, **kwargs)
-        super().save(*args, **kwargs)
