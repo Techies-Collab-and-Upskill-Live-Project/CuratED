@@ -29,7 +29,8 @@ schema_view = get_schema_view(
    openapi.Info(
       title="CuratED API",
       default_version='v1',
-      description="CurateD API Documentation",
+      description="API documentation for CuratED platform",
+      contact=openapi.Contact(email="noreply.curated@gmail.com"),
       license=openapi.License(name="BSD License"),
    ),
    public=True,

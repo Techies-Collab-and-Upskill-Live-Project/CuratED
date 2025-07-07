@@ -1,8 +1,32 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.core.validators import EmailValidator
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # This is for more customization
+        token['full_name'] = user.get_full_name()
+        token['email'] = user.email
+        return token
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        # Extra response data
+        data['user'] = {
+            'id': str(self.user.id),
+            'email': self.user.email,
+            'full_name': self.user.get_full_name(),
+            'first_name': self.user.first_name,
+            'last_name': self.user.last_name,
+        }
+        return data
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,7 +54,9 @@ class OTPVerifySerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=4)
 
-
+class ResendVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    
 class PasswordResetConfirmSerializer(serializers.Serializer):
     uid = serializers.CharField()
     token = serializers.CharField()

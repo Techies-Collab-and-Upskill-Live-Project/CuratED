@@ -17,9 +17,14 @@ from django.utils import timezone
 import random
 import secrets
 from django.core.mail import send_mail
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 class RegisterView(CreateAPIView):
     permission_classes = [AllowAny]
@@ -68,6 +73,7 @@ class RegisterView(CreateAPIView):
 
 class ResendVerificationView(CreateAPIView):
     permission_classes = [AllowAny]
+    serializer_class = ResendVerificationSerializer
 
     def post(self, request):
         email = request.data.get('email')

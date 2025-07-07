@@ -17,12 +17,14 @@ ALLOWED_HOSTS = [
     "prodcurated.vercel.app",
     "localhost:3000",
     'slimy-libby-htcode-d75a500b.koyeb.app',
+    "127.0.0.1",
 ]
 CORS_ALLOWED_ORIGINS = [
     "https://devcurated.vercel.app",
     "http://localhost:3000",
     "devcurated.vercel.app",
     "localhost:3000",
+    
 ]
 YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')
 
@@ -47,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,6 +60,16 @@ MIDDLEWARE = [
     'accounts.middleware.TokenHandlerMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
+
+# WhiteNoise Configuration
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_MANIFEST_STRICT = False
+WHITENOISE_ALLOW_ALL_ORIGINS = True
+
+if DEBUG:
+    INSTALLED_APPS = ['whitenoise.runserver_nostatic'] + INSTALLED_APPS
+    STATICFILES_DIRS = [BASE_DIR / 'static']
 
 ROOT_URLCONF = 'backend.urls'
 

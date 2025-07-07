@@ -3,6 +3,7 @@ from .views import *
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
+    path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('verify-otp/', OTPVerifyView.as_view(), name='verify-otp'),
     path('resend-verification/', ResendVerificationView.as_view(), name='resend-verification'),
     path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset-request'),
