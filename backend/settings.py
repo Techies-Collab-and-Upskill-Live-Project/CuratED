@@ -22,8 +22,8 @@ ALLOWED_HOSTS = [
 CORS_ALLOWED_ORIGINS = [
     "https://devcurated.vercel.app",
     "http://localhost:3000",
-    "devcurated.vercel.app",
-    "localhost:3000",
+    # "devcurated.vercel.app",
+    # "localhost:3000",
     
 ]
 YOUTUBE_API_KEY = config('YOUTUBE_API_KEY')

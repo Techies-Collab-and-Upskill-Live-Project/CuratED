@@ -188,14 +188,20 @@ class PlaylistViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
+        
+        if not user or not user.is_authenticated:
+            return Playlist.objects.none()
+        
         return Playlist.objects.filter(
-            models.Q(user=self.request.user) |
-            models.Q(shared_with=self.request.user) |
+            models.Q(user=user) |
+            models.Q(shared_with=user) |
             models.Q(is_public=True)
         ).distinct()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
 
     @action(detail=True, methods=['post'])
     def share(self, request, pk=None):
