@@ -12,6 +12,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = [
     "https://devcurated.vercel.app",
     "https://prodcurated.vercel.app",
+    "https://curated-frontend.vercel.app",
     "http://localhost:3000",
     "devcurated.vercel.app",
     "prodcurated.vercel.app",
@@ -22,6 +23,7 @@ ALLOWED_HOSTS = [
 CORS_ALLOWED_ORIGINS = [
     "https://devcurated.vercel.app",
     "http://localhost:3000",
+    "https://curated-frontend.vercel.app",
     "devcurated.vercel.app",
     "localhost:3000",
     
